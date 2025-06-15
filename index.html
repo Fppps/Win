@@ -589,11 +589,12 @@
     const bootSynth = new Tone.Synth().toDestination();
 
     function playBootSound() {
-        // Simple ascending arpeggio
-        bootSynth.triggerAttackRelease("C4", "8n", Tone.now());
-        bootSynth.triggerAttackRelease("E4", "8n", Tone.now() + 0.1);
-        bootSynth.triggerAttackRelease("G4", "8n", Tone.now() + 0.2);
-        bootSynth.triggerAttackRelease("C5", "4n", Tone.now() + 0.3);
+        // Simple ascending arpeggio for a modern Windows boot sound feel
+        const now = Tone.now();
+        bootSynth.triggerAttackRelease("C4", "8n", now);
+        bootSynth.triggerAttackRelease("E4", "8n", now + 0.1);
+        bootSynth.triggerAttackRelease("G4", "8n", now + 0.2);
+        bootSynth.triggerAttackRelease("C5", "4n", now + 0.3);
     }
 
     // --- Utility Functions ---
@@ -1284,6 +1285,16 @@
                             </div>
                             <div id="updates-content" class="p-4 flex-grow overflow-auto hidden">
                                 <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
+                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                                    <p class="font-bold text-lg mb-2">Version: 0.3.8</p>
+                                    <p class="text-blue-400 mb-2">Codename: Scrolling added</p>
+                                    <p class="text-gray-300">
+                                        This mini-update ensures that various application windows and content areas within the OS
+                                        now correctly support scrolling when their content exceeds the visible area.
+                                        This improves usability and access to information in apps like File Explorer, Terminal,
+                                        and other dynamic content displays.
+                                    </p>
+                                </div>
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: 0.3.73</p>
                                     <p class="text-blue-400 mb-2">Codename: Boot up sound Update & Loading Update</p>
