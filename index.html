@@ -12,20 +12,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tone.js for web audio -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-    <!-- Firebase SDK (Version 11.6.1 is used as per instructions) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global Firebase variables
-        window.firebaseApp = null;
-        window.db = null;
-        window.auth = null;
-        window.userId = null; // Will store the authenticated user ID
-        window.isAuthReady = false; // Flag to indicate if auth state is determined
-
-        // Global user preferences
+    <!-- Removed Firebase SDK imports -->
+    <script>
+        // Global user preferences - these will now be session-only without Firebase
         window.userPreferences = {
             username: 'User Name',
             password: '', // Storing password for demo, but in real app, only store hash
@@ -33,127 +22,53 @@
             theme: 'dark-mode' // 'dark-mode' or 'light-mode'
         };
 
-        // Check for global __firebase_config and __app_id provided by Canvas
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // window.userId will now be a random ID per session, as there's no auth
+        window.userId = crypto.randomUUID();
+        window.isAuthReady = true; // Always true as there's no async auth
 
-        // Initialize Firebase on window load
-        window.addEventListener('load', async () => {
-            try {
-                if (Object.keys(firebaseConfig).length > 0) {
-                    window.firebaseApp = initializeApp(firebaseConfig);
-                    window.db = getFirestore(window.firebaseApp);
-                    window.auth = getAuth(window.firebaseApp);
+        // No Firebase-specific load/save functions
+        // loadUserPreferences and saveUserPreferences functions are now simplified
+        // to only update/read from the in-memory window.userPreferences object.
 
-                    onAuthStateChanged(window.auth, async (user) => {
-                        if (user) {
-                            window.userId = user.uid;
-                        } else {
-                            // Sign in anonymously if no user is logged in
-                            try {
-                                if (initialAuthToken) {
-                                    await signInWithCustomToken(window.auth, initialAuthToken);
-                                    window.userId = window.auth.currentUser.uid;
-                                } else {
-                                    const anonUserCredential = await signInAnonymously(window.auth);
-                                    window.userId = anonUserCredential.user.uid;
-                                }
-                            } catch (error) {
-                                console.error("Firebase Anonymous Sign-in Error:", error);
-                                // Fallback to a random ID if anonymous sign-in fails
-                                window.userId = crypto.randomUUID();
-                            }
-                        }
-                        window.isAuthReady = true;
-                        // Now that auth is ready, proceed with desktop initialization and loading preferences
-                        initializeDesktopListeners();
-                        loadUserPreferences(); // Load user data after successful authentication
-                    });
-                } else {
-                    console.warn("Firebase config not found. Running without Firebase features.");
-                    // Fallback to random ID if Firebase is not configured
-                    window.userId = crypto.randomUUID();
-                    window.isAuthReady = true;
-                    initializeDesktopListeners(); // Initialize desktop without Firebase data
-                }
-            } catch (error) {
-                console.error("Firebase Initialization Error:", error);
-                // Fallback to random ID if Firebase initialization fails
-                window.userId = crypto.randomUUID();
-                window.isAuthReady = true;
-                initializeDesktopListeners(); // Initialize desktop without Firebase data
-            }
-        });
-
-        async function loadUserPreferences() {
-            if (!window.db || !window.userId) {
-                console.warn("Firestore or User ID not available. Cannot load preferences.");
-                return;
-            }
-            try {
-                // Private data: /artifacts/{appId}/users/{userId}/settings/user_preferences
-                const userDocRef = doc(window.db, `artifacts/${appId}/users/${window.userId}/settings/user_preferences`);
-                const docSnap = await getDoc(userDocRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    window.userPreferences.username = data.username || window.userPreferences.username;
-                    window.userPreferences.password = data.password || window.userPreferences.password; // Note: Storing password directly is insecure for production
-                    window.userPreferences.wallpaperUrl = data.wallpaperUrl || window.userPreferences.wallpaperUrl;
-                    window.userPreferences.theme = data.theme || window.userPreferences.theme;
-                    console.log("User preferences loaded:", window.userPreferences);
-                } else {
-                    console.log("No user preferences found, using defaults.");
-                }
-
-                // Apply loaded preferences
-                updateProfileDisplay();
-                applyWallpaper(window.userPreferences.wallpaperUrl);
-                applyTheme(window.userPreferences.theme);
-
-            } catch (e) {
-                console.error("Error loading user preferences:", e);
-                showMessage("Failed to load user settings.");
-            }
+        function loadUserPreferences() {
+            // With no Firebase, preferences are initialized to defaults at script load.
+            // This function would typically load from localStorage or similar, but
+            // for now, it just sets up the initial display.
+            updateProfileDisplay();
+            applyWallpaper(window.userPreferences.wallpaperUrl);
+            applyTheme(window.userPreferences.theme);
+            console.log("User preferences initialized from defaults.");
         }
 
-        async function saveUserPreferences() {
-            if (!window.db || !window.userId) {
-                console.warn("Firestore or User ID not available. Cannot save preferences.");
-                return;
-            }
-            try {
-                // Private data: /artifacts/{appId}/users/{userId}/settings/user_preferences
-                const userDocRef = doc(window.db, `artifacts/${appId}/users/${window.userId}/settings/user_preferences`);
-                await setDoc(userDocRef, window.userPreferences, { merge: true });
-                showMessage("Settings saved successfully!");
-                console.log("User preferences saved:", window.userPreferences);
-                // After saving, re-apply display for immediate effect (e.g., username change)
-                updateProfileDisplay();
-                applyWallpaper(window.userPreferences.wallpaperUrl);
-                applyTheme(window.userPreferences.theme);
-
-            } catch (e) {
-                console.error("Error saving user preferences:", e);
-                showMessage("Failed to save settings.");
-            }
+        function saveUserPreferences() {
+            // With no Firebase, saving means updating the in-memory object and then
+            // re-applying settings. Persistence across sessions is not available.
+            showMessage("Settings applied (not persistent without a backend)!");
+            console.log("User preferences saved (in-memory only):", window.userPreferences);
+            updateProfileDisplay();
+            applyWallpaper(window.userPreferences.wallpaperUrl);
+            applyTheme(window.userPreferences.theme);
         }
 
         function updateProfileDisplay() {
+            const welcomeMessage = document.getElementById('welcome-message');
             if (welcomeMessage) {
                 welcomeMessage.textContent = `Welcome Back, ${window.userPreferences.username}`;
             }
-            // Update the profile in the settings accounts section if it's open
             const accountsUsernameInput = document.querySelector('#accounts-username-input');
             if (accountsUsernameInput) {
                 accountsUsernameInput.value = window.userPreferences.username;
             }
+            // Password input will reflect current in-memory value but won't be saved
+            const accountsPasswordInput = document.querySelector('#accounts-password-input');
+            if (accountsPasswordInput) {
+                 accountsPasswordInput.value = window.userPreferences.password;
+            }
         }
 
         function applyWallpaper(url) {
+            const desktopEnvContainer = document.getElementById('desktop-env-container');
             if (desktopEnvContainer) {
-                // Update CSS variable directly
                 desktopEnvContainer.style.setProperty('--desktop-image', `url('${url}')`);
             }
         }
@@ -162,7 +77,6 @@
             if (document.body) {
                 if (theme === 'light-mode') {
                     document.body.classList.add('light-mode');
-                    // Also update the toggle in Display Settings if it's open
                     const themeModeToggle = document.querySelector('#display-settings-window #theme-mode');
                     if (themeModeToggle) themeModeToggle.checked = true;
                 } else {
@@ -1030,7 +944,7 @@
                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                     <p class="font-bold text-lg mb-2">Version: 0.3.4</p>
                     <p class="text-blue-400 mb-2">Codename: Login Patch & boot up sounds</p>
-                    <p class="text-gray-300 text-sm">
+                    <p class="text-300 text-sm">
                         This update revamps the login screen with a modern aesthetic and introduces a subtle boot-up sound for a more immersive experience.
                     </p>
                 </div>
@@ -1516,19 +1430,17 @@
             if (accountsPasswordInput) accountsPasswordInput.value = window.userPreferences.password; // Insecure for production
         } else if (categoryId === 'personalization') {
             const currentWallpaperPreview = settingsWindowElement.querySelector('#current-wallpaper-preview');
-            if (currentWallpaperPreview) {
-                // Remove the "url()" and apply to background-image directly
-                currentWallpaperPreview.style.backgroundImage = window.desktopEnvContainer.style.getPropertyValue('--desktop-image');
+            const desktopEnvContainer = document.getElementById('desktop-env-container'); // Get desktop container
+            if (currentWallpaperPreview && desktopEnvContainer) {
+                currentWallpaperPreview.style.backgroundImage = desktopEnvContainer.style.getPropertyValue('--desktop-image');
             }
             const wallpaperUrlInput = settingsWindowElement.querySelector('#wallpaper-url-input');
             if (wallpaperUrlInput) {
-                // Set the input value to the current wallpaper URL (if not a predefined one)
                 const currentWallpaper = window.userPreferences.wallpaperUrl;
-                // If it's a predefined asset, don't show the URL in the input
                 if (!currentWallpaper.startsWith('Assets/Background/')) {
                     wallpaperUrlInput.value = currentWallpaper;
                 } else {
-                    wallpaperUrlInput.value = ''; // Clear if it's a default asset
+                    wallpaperUrlInput.value = '';
                 }
             }
         }
@@ -1584,28 +1496,28 @@
                     iconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-lg"></i>';
                     bigIconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center relative">
+                        <div class="p-4 flex-grow overflow-auto relative">
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 ${bigIconHTML}
                             </div>
                             <h3 class="text-xl font-semibold mb-3 relative z-10">My PC</h3>
-                            <ul class="space-y-2 text-center relative z-10">
-                                <li class="flex items-center justify-center gap-2">
+                            <ul class="space-y-2 relative z-10">
+                                <li class="flex items-center gap-2">
                                     <i class="fa-solid fa-hard-drive text-gray-500"></i> Local Disk (C:)
                                 </li>
-                                <li class="flex items-center justify-center gap-2">
+                                <li class="flex items-center gap-2">
                                     <i class="fa-solid fa-folder text-yellow-500"></i> Documents
                                 </li>
-                                <li class="flex items-center justify-center gap-2">
+                                <li class="flex items-center gap-2">
                                     <i class="fa-solid fa-folder text-yellow-500"></i> Downloads
                                 </li>
-                                <li class="flex items-center justify-center gap-2">
+                                <li class="flex items-center gap-2">
                                     <i class="fa-solid fa-image text-purple-500"></i> Pictures
                                 </li>
-                                <li class="flex items-center justify-center gap-2">
+                                <li class="flex items-center gap-2">
                                     <i class="fa-solid fa-music text-green-500"></i> Music
                                 </li>
-                                <li class="flex items-center justify-center gap-2">
+                                <li class="flex items-center gap-2">
                                     <i class="fa-solid fa-video text-red-500"></i> Videos
                                 </li>
                             </ul>
@@ -1623,7 +1535,7 @@
                             <input type="text" class="flex-grow rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="https://www.conceptbrowser.com" readonly>
                             <button class="ml-2 p-1 rounded-full text-gray-400"><i class="fa-solid fa-sync"></i></button>
                         </div>
-                        <div class="p-4 flex-grow overflow-auto text-center flex flex-col items-center justify-center relative">
+                        <div class="p-4 flex-grow overflow-auto text-center relative">
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 ${bigIconHTML}
                             </div>
@@ -1908,10 +1820,154 @@
                         </div>
                     `;
                     break;
+                case 'date-time':
+                    iconHTML = '<i class="fa-solid fa-clock text-blue-400 text-lg"></i>';
+                    bigIconHTML = '<i class="fa-solid fa-clock text-blue-400 text-8xl mb-4 opacity-50"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto relative flex flex-col justify-between">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                ${bigIconHTML}
+                            </div>
+                            <div class="app-main-content relative z-10 flex flex-col items-center justify-center h-full">
+                                <h3 class="text-xl font-semibold mb-3">Date and Time</h3>
+                                <p class="text-gray-300 mb-4">Welcome to Date and Time! Here's the current system time:</p>
+                                <div class="text-center">
+                                    <p class="text-5xl font-bold text-blue-300" id="app-current-time"></p>
+                                    <p class="text-2xl text-gray-400 mt-2" id="app-current-date"></p>
+                                </div>
+                                <div class="mt-6 flex justify-center gap-4">
+                                    <button class="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700">Change Time</button>
+                                    <button class="px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600">Change Date</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'calculator':
+                    iconHTML = '<i class="fa-solid fa-calculator text-red-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center">
+                            <div class="w-full max-w-sm bg-gray-900 rounded-lg shadow-xl p-4">
+                                <input type="text" id="calc-display" class="w-full mb-4 px-3 py-2 text-3xl text-right bg-gray-700 text-white rounded-md focus:outline-none" value="0" readonly>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button class="calc-btn bg-gray-500 col-span-2" data-value="C">C</button>
+                                    <button class="calc-btn bg-gray-500" data-value="\u2190">←</button>
+                                    <button class="calc-btn bg-orange-500" data-value="/">/</button>
+
+                                    <button class="calc-btn" data-value="7">7</button>
+                                    <button class="calc-btn" data-value="8">8</button>
+                                    <button class="calc-btn" data-value="9">9</button>
+                                    <button class="calc-btn bg-orange-500" data-value="*">*</button>
+
+                                    <button class="calc-btn" data-value="4">4</button>
+                                    <button class="calc-btn" data-value="5">5</button>
+                                    <button class="calc-btn" data-value="6">6</button>
+                                    <button class="calc-btn bg-orange-500" data-value="-">-</button>
+
+                                    <button class="calc-btn" data-value="1">1</button>
+                                    <button class="calc-btn" data-value="2">2</button>
+                                    <button class="calc-btn" data-value="3">3</button>
+                                    <button class="calc-btn bg-orange-500" data-value="+">+</button>
+
+                                    <button class="calc-btn col-span-2" data-value="0">0</button>
+                                    <button class="calc-btn" data-value=".">.</button>
+                                    <button class="calc-btn bg-blue-600" data-value="=">=</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'todo-list':
+                    iconHTML = '<i class="fa-solid fa-list-check text-green-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto">
+                            <h3 class="text-xl font-semibold mb-4">My To-Do List</h3>
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="todo-input" class="flex-grow rounded-md" placeholder="Add a new task...">
+                                <button id="add-todo-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">Add</button>
+                            </div>
+                            <ul id="todo-list-items" class="space-y-2">
+                                <!-- Example tasks, dynamically added/removed -->
+                                <li class="flex items-center bg-gray-800 p-2 rounded-md justify-between">
+                                    <span>Learn more about Windows 13</span>
+                                    <button class="text-red-400 hover:text-red-500 text-sm delete-todo-btn">Delete</button>
+                                </li>
+                                <li class="flex items-center bg-gray-800 p-2 rounded-md justify-between">
+                                    <span>Build a new app concept</span>
+                                    <button class="text-red-400 hover:text-red-500 text-sm delete-todo-btn">Delete</button>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                    break;
+                case 'display-settings':
+                    iconHTML = '<i class="fa-solid fa-display text-blue-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto">
+                            <h3 class="text-xl font-semibold mb-4">Display Settings</h3>
+
+                            <div class="mb-6">
+                                <label for="theme-mode" class="flex items-center cursor-pointer">
+                                    <span class="text-gray-300 mr-3">Dark Mode / Light Mode</span>
+                                    <div class="relative">
+                                        <input type="checkbox" id="theme-mode" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="mb-6">
+                                <label for="brightness" class="block text-lg font-medium text-gray-300 mb-2">Brightness</label>
+                                <input type="range" id="brightness" min="20" max="100" value="100" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                                <span class="text-sm text-gray-400 mt-2">Adjust screen brightness.</span>
+                            </div>
+
+                            <div class="mb-6">
+                                <label for="night-light" class="flex items-center cursor-pointer">
+                                    <span class="text-gray-300 mr-3">Night Light</span>
+                                    <div class="relative">
+                                        <input type="checkbox" id="night-light" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                    </div>
+                                </label>
+                                <p class="text-sm text-gray-400 mt-2">Reduce blue light to help you sleep.</p>
+                            </div>
+
+                            <div class="mb-6">
+                                <label for="scale" class="block text-lg font-medium text-gray-300 mb-2">Scale and Layout</label>
+                                <input type="range" id="scale" min="100" max="200" value="100" step="25" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                                <p class="text-sm text-gray-400 mt-1">Recommended: <span id="scale-value">100%</span></p>
+                            </div>
+
+                            <div class="mb-6">
+                                <label for="resolution" class="block text-lg font-medium text-gray-300 mb-2">Display Resolution</label>
+                                <select id="resolution" class="w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>1920 x 1080 (Recommended)</option>
+                                    <option>1600 x 900</option>
+                                    <option>1366 x 768</option>
+                                    <option>1280 x 720</option>
+                                </select>
+                            </div>
+
+                            <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="saveUserPreferences()">Apply Display Settings</button>
+                        </div>
+                    `;
+                    break;
                 default:
                     iconHTML = '<i class="fa-solid fa-cube text-gray-400 text-lg"></i>';
                     bigIconHTML = '<i class="fa-solid fa-cube text-gray-400 text-8xl mb-4 opacity-50"></i>';
-                    contentHTML = `<div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center relative"><div class="absolute inset-0 flex items-center justify-center pointer-events-none">${bigIconHTML}</div><h1>${appName}</h1><p>Welcome to ${appName}!</p></div>`;
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto relative">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                ${bigIconHTML}
+                            </div>
+                            <h1 class="relative z-10">${appName}</h1>
+                            <p class="relative z-10">Welcome to ${appName}!</p>
+                            <div class="mt-4 p-3 bg-gray-800 rounded-md relative z-10">
+                                <p class="text-sm">This is a generic application window.</p>
+                            </div>
+                        </div>
+                    `;
             }
 
             windowElement.innerHTML = `
@@ -2248,7 +2304,7 @@
                     document.body.classList.remove('light-mode');
                     window.userPreferences.theme = 'dark-mode';
                 }
-                saveUserPreferences(); // Save theme preference
+                saveUserPreferences(); // This will now just update in-memory
             });
         }
     }
@@ -2277,7 +2333,7 @@
         element.classList.remove('border-transparent');
         element.classList.add('border-blue-500');
 
-        showMessage('Wallpaper preview updated. Click "Save Wallpaper" to apply permanently.');
+        showMessage('Wallpaper preview updated. Click "Save Wallpaper" to apply.');
     }
 
     function applyCustomWallpaper() {
@@ -2303,14 +2359,14 @@
             // In a real application, passwords must be securely hashed on the server side.
             window.userPreferences.password = accountsPasswordInput.value;
         }
-        saveUserPreferences();
+        saveUserPreferences(); // This will now just update in-memory
     }
 
 
     // --- Date and Time App Logic ---
     function updateDateTimeApp(appWindowElement) {
-        const appTimeDisplay = appWindowElement.querySelector('#app-time');
-        const appDateDisplay = appWindowElement.querySelector('#app-date');
+        const appTimeDisplay = appWindowElement.querySelector('#app-current-time');
+        const appDateDisplay = appWindowElement.querySelector('#app-current-date');
         const now = new Date();
         const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
         const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -2408,9 +2464,15 @@
                 if (welcomeMessage) welcomeMessage.classList.add('show');
             }, 300);
         }
+
+        // Load initial user preferences (now from in-memory defaults)
+        loadUserPreferences();
     }
-    // No explicit window.onload here, as Firebase initialization handles it now.
-    // The Firebase script module handles calling initializeDesktopListeners() and loadUserPreferences().
+
+    // Call initializeDesktopListeners when the window fully loads
+    window.addEventListener('load', () => {
+        initializeDesktopListeners();
+    });
 </script>
 </body>
 </html>
