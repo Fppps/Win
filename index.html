@@ -12,14 +12,240 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tone.js for web audio -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <!-- Firebase SDK (Version 11.6.1 is used as per instructions) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase variables
+        window.firebaseApp = null;
+        window.db = null;
+        window.auth = null;
+        window.userId = null; // Will store the authenticated user ID
+        window.isAuthReady = false; // Flag to indicate if auth state is determined
+
+        // Global user preferences
+        window.userPreferences = {
+            username: 'User Name',
+            password: '', // Storing password for demo, but in real app, only store hash
+            wallpaperUrl: 'Assets/Background/BackgroundV2.png',
+            theme: 'dark-mode' // 'dark-mode' or 'light-mode'
+        };
+
+        // Check for global __firebase_config and __app_id provided by Canvas
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase on window load
+        window.addEventListener('load', async () => {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    window.firebaseApp = initializeApp(firebaseConfig);
+                    window.db = getFirestore(window.firebaseApp);
+                    window.auth = getAuth(window.firebaseApp);
+
+                    onAuthStateChanged(window.auth, async (user) => {
+                        if (user) {
+                            window.userId = user.uid;
+                        } else {
+                            // Sign in anonymously if no user is logged in
+                            try {
+                                if (initialAuthToken) {
+                                    await signInWithCustomToken(window.auth, initialAuthToken);
+                                    window.userId = window.auth.currentUser.uid;
+                                } else {
+                                    const anonUserCredential = await signInAnonymously(window.auth);
+                                    window.userId = anonUserCredential.user.uid;
+                                }
+                            } catch (error) {
+                                console.error("Firebase Anonymous Sign-in Error:", error);
+                                // Fallback to a random ID if anonymous sign-in fails
+                                window.userId = crypto.randomUUID();
+                            }
+                        }
+                        window.isAuthReady = true;
+                        // Now that auth is ready, proceed with desktop initialization and loading preferences
+                        initializeDesktopListeners();
+                        loadUserPreferences(); // Load user data after successful authentication
+                    });
+                } else {
+                    console.warn("Firebase config not found. Running without Firebase features.");
+                    // Fallback to random ID if Firebase is not configured
+                    window.userId = crypto.randomUUID();
+                    window.isAuthReady = true;
+                    initializeDesktopListeners(); // Initialize desktop without Firebase data
+                }
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                // Fallback to random ID if Firebase initialization fails
+                window.userId = crypto.randomUUID();
+                window.isAuthReady = true;
+                initializeDesktopListeners(); // Initialize desktop without Firebase data
+            }
+        });
+
+        async function loadUserPreferences() {
+            if (!window.db || !window.userId) {
+                console.warn("Firestore or User ID not available. Cannot load preferences.");
+                return;
+            }
+            try {
+                // Private data: /artifacts/{appId}/users/{userId}/settings/user_preferences
+                const userDocRef = doc(window.db, `artifacts/${appId}/users/${window.userId}/settings/user_preferences`);
+                const docSnap = await getDoc(userDocRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    window.userPreferences.username = data.username || window.userPreferences.username;
+                    window.userPreferences.password = data.password || window.userPreferences.password; // Note: Storing password directly is insecure for production
+                    window.userPreferences.wallpaperUrl = data.wallpaperUrl || window.userPreferences.wallpaperUrl;
+                    window.userPreferences.theme = data.theme || window.userPreferences.theme;
+                    console.log("User preferences loaded:", window.userPreferences);
+                } else {
+                    console.log("No user preferences found, using defaults.");
+                }
+
+                // Apply loaded preferences
+                updateProfileDisplay();
+                applyWallpaper(window.userPreferences.wallpaperUrl);
+                applyTheme(window.userPreferences.theme);
+
+            } catch (e) {
+                console.error("Error loading user preferences:", e);
+                showMessage("Failed to load user settings.");
+            }
+        }
+
+        async function saveUserPreferences() {
+            if (!window.db || !window.userId) {
+                console.warn("Firestore or User ID not available. Cannot save preferences.");
+                return;
+            }
+            try {
+                // Private data: /artifacts/{appId}/users/{userId}/settings/user_preferences
+                const userDocRef = doc(window.db, `artifacts/${appId}/users/${window.userId}/settings/user_preferences`);
+                await setDoc(userDocRef, window.userPreferences, { merge: true });
+                showMessage("Settings saved successfully!");
+                console.log("User preferences saved:", window.userPreferences);
+                // After saving, re-apply display for immediate effect (e.g., username change)
+                updateProfileDisplay();
+                applyWallpaper(window.userPreferences.wallpaperUrl);
+                applyTheme(window.userPreferences.theme);
+
+            } catch (e) {
+                console.error("Error saving user preferences:", e);
+                showMessage("Failed to save settings.");
+            }
+        }
+
+        function updateProfileDisplay() {
+            if (welcomeMessage) {
+                welcomeMessage.textContent = `Welcome Back, ${window.userPreferences.username}`;
+            }
+            // Update the profile in the settings accounts section if it's open
+            const accountsUsernameInput = document.querySelector('#accounts-username-input');
+            if (accountsUsernameInput) {
+                accountsUsernameInput.value = window.userPreferences.username;
+            }
+        }
+
+        function applyWallpaper(url) {
+            if (desktopEnvContainer) {
+                // Update CSS variable directly
+                desktopEnvContainer.style.setProperty('--desktop-image', `url('${url}')`);
+            }
+        }
+
+        function applyTheme(theme) {
+            if (document.body) {
+                if (theme === 'light-mode') {
+                    document.body.classList.add('light-mode');
+                    // Also update the toggle in Display Settings if it's open
+                    const themeModeToggle = document.querySelector('#display-settings-window #theme-mode');
+                    if (themeModeToggle) themeModeToggle.checked = true;
+                } else {
+                    document.body.classList.remove('light-mode');
+                    const themeModeToggle = document.querySelector('#display-settings-window #theme-mode');
+                    if (themeModeToggle) themeModeToggle.checked = false;
+                }
+            }
+        }
+
+    </script>
     <!-- Embedded CSS styles -->
     <style>
+        /* Define CSS variables for themes. Default values are for dark mode. */
+        :root {
+            --main-bg-color: #3E3572; /* Dark mode background color for the desktop underneath the image */
+            --desktop-image: url('Assets/Background/BackgroundV2.png'); /* Transparent image overlay */
+            --desktop-text-color: #f9fafb; /* Light text for dark background */
+
+            --window-bg: rgba(26, 26, 26, 0.95); /* Semi-transparent dark gray for window background */
+            --window-border: #4a4a4a; /* Dark gray border for windows */
+            --window-text: #f9fafb; /* Light text for window content */
+
+            --header-bg: #1f2937; /* Darker gray for window headers */
+            --header-border: #4a4a4a; /* Darker gray border for headers */
+            --header-button-hover: #374151; /* Darker gray for header button hover */
+            --header-button-text: #9ca3af; /* Light gray for header button icons */
+
+            --sidebar-bg: #2a2a2a; /* Dark gray for settings sidebar */
+            --sidebar-border: #4a4a4a; /* Dark gray border for sidebar */
+            --content-area-bg: #1a1a1a; /* Even darker gray for settings content area */
+
+            --input-bg: #374151; /* Medium gray for inputs */
+            --input-text: #f9fafb; /* Light text for inputs */
+            --placeholder-color: #9ca3af; /* Gray placeholder text */
+            --focus-ring-color: #3b82f6; /* Blue focus ring for inputs */
+
+            --general-button-bg: #3b82f6; /* Blue for general buttons */
+            --general-button-hover: #2563eb; /* Darker blue for general button hover */
+            --general-button-text: #ffffff; /* White text for general buttons */
+
+            --start-menu-item-hover: rgba(255, 255, 255, 0.1); /* Subtle hover for start menu items */
+            --context-menu-item-hover: #3b82f6; /* Blue hover for context menu items */
+        }
+
+        /* Light mode overrides for CSS variables */
+        body.light-mode {
+            --main-bg-color: #8975FC; /* Light mode background color for the desktop underneath the image */
+            --desktop-text-color: #1a1a1a; /* Dark text for light background */
+
+            --window-bg: rgba(255, 255, 255, 0.95); /* Semi-transparent white for window background */
+            --window-border: #d1d5db; /* Light gray border for windows */
+            --window-text: #1a1a1a; /* Dark text for window content */
+
+            --header-bg: #e0e7ff; /* Lighter blue-ish for window headers */
+            --header-border: #a7b7e5; /* Light blue border for headers */
+            --header-button-hover: #a7b7e5; /* Lighter blue for header button hover */
+            --header-button-text: #3b82f6; /* Blue for header button icons */
+
+            --sidebar-bg: #f3f4f6; /* Light gray for settings sidebar */
+            --sidebar-border: #e5e7eb; /* Lighter gray border for sidebar */
+            --content-area-bg: #ffffff; /* White for settings content area */
+
+            --input-bg: #e5e7eb; /* Lighter gray for inputs */
+            --input-text: #1a1a1a; /* Dark text for inputs */
+            --placeholder-color: #6b7280; /* Darker gray placeholder text */
+            --focus-ring-color: #60a5fa; /* Lighter blue focus ring */
+
+            --general-button-bg: #60a5fa; /* Lighter blue for general buttons */
+            --general-button-hover: #3b82f6; /* Darker blue for general button hover */
+
+            --start-menu-item-hover: rgba(0, 0, 0, 0.05); /* Subtle hover for light mode start menu items */
+            --context-menu-item-hover: #60a5fa; /* Lighter blue hover for context menu items */
+        }
+
+        /* Base styles applied to body and globally */
         body {
-            /* Use Inter as the primary font, Source Sans 3 for specific elements */
             font-family: 'Inter', sans-serif;
             overflow: hidden; /* Prevent body scroll */
             cursor: default;
-            background-color: #1a1a1a; /* Fallback for body, desktop-env-container has the main background */
+            background-color: var(--main-bg-color); /* Apply main background color */
+            color: var(--desktop-text-color); /* Apply desktop text color */
+            transition: background-color 0.5s ease-out, color 0.5s ease-out;
         }
 
         /* Custom scrollbar for better aesthetics */
@@ -28,17 +254,18 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #2a2a2a;
+            background: var(--sidebar-bg); /* Use a theme-adaptive background */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #555;
+            background: #888; /* Neutral gray for thumb */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #777;
+            background: #555; /* Darker neutral gray on hover */
         }
 
+        /* Window styles */
         .window {
             position: absolute;
             top: 50%;
@@ -46,12 +273,16 @@
             transform: translate(-50%, -50%); /* Center initially */
             min-width: 300px;
             min-height: 200px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); /* Enhanced shadow for depth */
             border-radius: 12px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            resize: both; /* Enable native resize for now, will override with custom handle */
+            resize: both; /* Enable native resize, overridden by custom handle */
+            background-color: var(--window-bg);
+            border: 1px solid var(--window-border);
+            color: var(--window-text);
+            transition: background-color 0.3s ease-out, border-color 0.3s ease-out, color 0.3s ease-out, box-shadow 0.3s ease-out;
         }
 
         .window-header {
@@ -59,6 +290,9 @@
             user-select: none;
             border-top-left-radius: 12px;
             border-top-right-radius: 12px;
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
         }
 
         .window-header:active {
@@ -78,7 +312,7 @@
 
         .maximized {
             width: 100vw !important;
-            height: 100vh !important; /* Full height as there's no taskbar */
+            height: 100vh !important;
             top: 0 !important;
             left: 0 !important;
             transform: none !important;
@@ -86,21 +320,27 @@
         }
 
         .minimized {
-            display: none !important; /* Hide when minimized, taskbar icon remains */
+            display: none !important;
         }
 
+        /* Start Menu and Context Menu */
         .start-menu {
             position: absolute;
-            bottom: 0; /* Changed from 4rem to 0 to sit at the very bottom */
+            bottom: 0;
             left: 0.5rem;
-            width: 900px; /* Wider to accommodate 3 columns */
+            width: 900px;
             max-width: 95vw;
-            height: 500px; /* Fixed height for consistent look */
+            height: 500px;
             max-height: calc(100vh - 5rem);
-            overflow: hidden; /* Hide overflow for internal scrolling sections */
+            overflow: hidden;
             transform-origin: bottom left;
-            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-            display: flex; /* Use flexbox for columns */
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out, background-color 0.3s ease-out;
+            display: flex;
+            background-color: var(--window-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px); /* Slightly stronger blur */
         }
 
         .start-menu.hidden {
@@ -109,11 +349,30 @@
             pointer-events: none;
         }
 
+        .start-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+
+        .start-menu-item:hover {
+            background-color: var(--start-menu-item-hover);
+        }
+
         .context-menu {
             position: absolute;
             z-index: 9999;
             transform-origin: top left;
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out, background-color 0.3s ease-out;
+            background-color: var(--window-bg);
+            border-radius: 8px;
+            padding: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(15px); /* Slightly stronger blur */
         }
         .context-menu.hidden {
             transform: scale(0.9);
@@ -121,7 +380,17 @@
             pointer-events: none;
         }
 
-        /* Keyframe for window opening effect */
+        .context-menu div {
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .context-menu div:hover {
+            background-color: var(--context-menu-item-hover);
+            color: white;
+        }
+
+        /* Keyframe animations for windows */
         @keyframes window-open {
             from {
                 opacity: 0;
@@ -136,7 +405,6 @@
             animation: window-open 0.2s ease-out forwards;
         }
 
-        /* Keyframe for window closing effect */
         @keyframes window-close {
             from {
                 opacity: 1;
@@ -151,34 +419,33 @@
             animation: window-close 0.2s ease-out forwards;
         }
 
-
-        /* Desktop environment container will now hold the main background and be blurred */
+        /* Desktop environment container */
         #desktop-env-container {
-            position: fixed; /* Fix to viewport */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: url('Assets/Background/Background.png') no-repeat center center / cover;
-            transition: filter 0.5s ease-out; /* Smooth transition for blur */
-            z-index: 1; /* Below login screen initially */
-            display: flex; /* Keep flex for its internal structure */
-            flex-direction: column; /* Keep flex for its internal structure */
-            /* Initial brightness - controlled by JS */
+            background-color: var(--main-bg-color);
+            background-image: var(--desktop-image);
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            transition: filter 0.5s ease-out, background-color 0.5s ease-out;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
             filter: brightness(100%);
         }
         #desktop-env-container.blurred {
             filter: blur(5px);
         }
-        /* When login is complete, desktop-env-container will become the primary view */
         #desktop-env-container.desktop-active {
-            z-index: 10; /* Bring to front when active desktop */
+            z-index: 10;
         }
-        /* Night Light effect */
         #desktop-env-container.night-light-active {
             filter: brightness(var(--desktop-brightness-value, 100%)) sepia(0.3) hue-rotate(-20deg);
         }
-
 
         /* Login screen styles */
         #login-screen {
@@ -187,12 +454,12 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: transparent; /* Allow blurred desktop to show through */
+            background: transparent;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10000; /* Ensure it's on top */
+            z-index: 10000;
             color: white;
             transition: opacity 0.5s ease-out;
         }
@@ -202,19 +469,19 @@
         }
 
         .login-card {
-            background: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
-            backdrop-filter: blur(20px); /* Frosted glass effect */
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
             border-radius: 15px;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); /* Stronger shadow for depth */
             width: 90%;
             max-width: 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transform: translateY(20px); /* Initial position for animation */
-            opacity: 0; /* Initial opacity for animation */
+            transform: translateY(20px);
+            opacity: 0;
         }
         .login-card.show {
             transform: translateY(0);
@@ -224,19 +491,19 @@
 
         /* Profile picture on login screen */
         .profile-pic-login {
-            width: 96px; /* Reduced size */
+            width: 96px;
             height: 96px;
             border-radius: 50%;
-            background-color: #3b82f6; /* A default blue for the user */
+            background-color: #3b82f6;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 48px;
             margin-bottom: 24px;
-            color: white; /* Icon color */
-            overflow: hidden; /* Ensure avatar image fits */
-            border: 3px solid #60a5fa; /* Light blue border */
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); /* Glowing effect */
+            color: white;
+            overflow: hidden;
+            border: 3px solid #60a5fa;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
         }
         .profile-pic-login img {
             width: 100%;
@@ -246,40 +513,39 @@
 
         /* Welcome Back message */
         .welcome-message {
-            font-size: 2.5rem; /* Larger font */
-            font-weight: 300; /* Light weight */
+            font-size: 2.5rem;
+            font-weight: 300;
             margin-bottom: 1.5rem;
-            opacity: 0; /* Hidden by default */
-            transform: translateY(-20px); /* Move up for animation */
+            opacity: 0;
+            transform: translateY(-20px);
             transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-            color: #e0e7ff; /* Lighter blue-ish white */
+            color: #e0e7ff;
         }
         .welcome-message.show {
             opacity: 1;
             transform: translateY(0);
         }
 
-
         /* Custom Message Box Styles */
         #message-box {
             position: fixed;
-            bottom: 5rem; /* Above taskbar */
+            bottom: 5rem;
             right: 1rem;
             background-color: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 1rem 1.5rem;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            z-index: 11000; /* Higher than windows */
+            z-index: 11000;
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-            pointer-events: none; /* Allows clicks to pass through when hidden */
+            pointer-events: none;
         }
         #message-box.show {
             opacity: 1;
             transform: translateY(0);
-            pointer-events: auto; /* Enable clicks when visible */
+            pointer-events: auto;
         }
 
         /* Windows-style Loading Spinner */
@@ -288,8 +554,8 @@
             height: 50px;
             position: relative;
             margin-top: 20px;
-            transform: rotate(45deg); /* Rotate the whole container to make square motion look like diamond */
-            display: none; /* Hidden by default */
+            transform: rotate(45deg);
+            display: none;
         }
 
         .windows-spinner.show {
@@ -299,7 +565,7 @@
         .windows-spinner .dot {
             width: 12px;
             height: 12px;
-            background-color: #3b82f6; /* Blue dot */
+            background-color: #3b82f6;
             border-radius: 50%;
             position: absolute;
             animation: windows-dot-spin 1.5s infinite ease-in-out;
@@ -326,29 +592,30 @@
             }
         }
 
-
         /* Ensure windows-container does not block clicks on desktop icons */
         #windows-container {
             position: absolute;
             inset: 0;
-            pointer-events: none; /* Allow clicks to pass through to desktop icons/background initially */
+            pointer-events: none;
         }
 
         /* Settings App Specific Styles */
         .settings-sidebar {
-            width: 250px; /* Fixed width for sidebar */
-            background-color: #2a2a2a;
-            border-right: 1px solid #4a4a4a;
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
             padding: 1rem;
             flex-shrink: 0;
             overflow-y: auto;
+            transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
         }
 
         .settings-content-area {
             flex-grow: 1;
             padding: 1rem;
             overflow-y: auto;
-            background-color: #1a1a1a;
+            background-color: var(--content-area-bg);
+            transition: background-color 0.3s ease-out;
         }
 
         .settings-category-item {
@@ -358,11 +625,11 @@
             border-radius: 8px;
             margin-bottom: 0.5rem;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
 
         .settings-category-item:hover {
-            background-color: #3a3a3a;
+            background-color: var(--start-menu-item-hover); /* Reusing start menu item hover for consistency */
         }
 
         .settings-category-item.active {
@@ -378,9 +645,217 @@
         .settings-category-item span {
             font-weight: 500;
         }
+
+        /* Input field styling based on theme variables */
+        input[type="text"], input[type="password"], select {
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            padding: 0.75rem 1rem; /* Consistent padding */
+            border-radius: 8px; /* Slightly more rounded */
+            border: 1px solid var(--window-border); /* Subtle border */
+            transition: background-color 0.3s ease-out, color 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+        }
+        input[type="text"]::placeholder, input[type="password"]::placeholder {
+            color: var(--placeholder-color);
+        }
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            outline: none;
+            border-color: var(--focus-ring-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); /* Glow effect on focus */
+        }
+
+        /* Adjust desktop icon text for light mode */
+        body.light-mode .desktop-icon span {
+            color: var(--desktop-text-color); /* Ensures text color adapts */
+        }
+        /* Adjust start menu text for light mode */
+        body.light-mode .start-menu h2,
+        body.light-mode .start-menu ul li {
+            color: var(--window-text); /* Ensures text color adapts */
+        }
+        /* Adjust start button for light mode */
+        body.light-mode #start-button {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode #start-button:hover {
+            background-color: #60a5fa; /* Lighter blue hover for light mode */
+        }
+        body.light-mode #start-button .fa-windows {
+            color: #005fba; /* Darker blue for Windows icon in light mode */
+        }
+
+        /* Common button styles */
+        button {
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-out, box-shadow 0.2s ease-in-out;
+            border-radius: 8px; /* Default rounded corners for all buttons */
+            padding: 0.75rem 1.5rem; /* Default padding */
+            font-weight: 600; /* Semi-bold text */
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            background-color: var(--general-button-bg);
+            color: var(--general-button-text);
+        }
+
+        button:hover {
+            background-color: var(--general-button-hover);
+            transform: translateY(-1px); /* Slight lift effect */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); /* Pressed effect */
+        }
+
+        /* Specific button overrides */
+        .window-header button {
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 0; /* Override default padding */
+            width: 28px; /* Fixed size */
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--header-button-text);
+        }
+        .window-header button:hover {
+            background-color: var(--header-button-hover);
+            transform: none;
+            box-shadow: none;
+        }
+        .window-header .close-btn:hover {
+            background-color: #dc2626; /* Red for close button */
+            color: white;
+        }
+
+        /* Calculator specific styles */
+        #calc-display {
+            background-color: var(--input-bg); /* Use theme variable */
+            color: var(--input-text); /* Use theme variable */
+            border: 1px solid var(--window-border); /* Use theme variable */
+            text-align: right;
+            font-size: 2.5rem; /* Larger font */
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .calc-btn {
+            background-color: var(--input-bg); /* Match inputs or other suitable theme var */
+            color: var(--input-text); /* Match inputs or other suitable theme var */
+            border: none;
+            font-size: 1.25rem;
+            height: 50px;
+            border-radius: 10px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .calc-btn:hover {
+            background-color: var(--header-button-hover); /* A slightly lighter background on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .calc-btn:active {
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .calc-btn.bg-orange-500 {
+            background-color: #f97316; /* Orange for operators */
+            color: white;
+        }
+        .calc-btn.bg-orange-500:hover {
+            background-color: #ea580c;
+        }
+        .calc-btn.bg-blue-600 {
+            background-color: #2563eb; /* Blue for equals */
+            color: white;
+        }
+        .calc-btn.bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .calc-btn.bg-gray-500 {
+            background-color: #6b7280; /* Gray for C, backspace */
+            color: white;
+        }
+        .calc-btn.bg-gray-500:hover {
+            background-color: #4b5563;
+        }
+
+        /* To-Do List specific styles */
+        #todo-input {
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            border: 1px solid var(--window-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+        }
+        #todo-input:focus {
+            outline: none;
+            border-color: var(--focus-ring-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+        }
+        #add-todo-btn {
+            background-color: #10b981; /* Green */
+            color: white;
+        }
+        #add-todo-btn:hover {
+            background-color: #059669;
+        }
+        #todo-list-items li {
+            background-color: var(--sidebar-bg); /* Use sidebar background for list items */
+            border: 1px solid var(--sidebar-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
+        }
+        #todo-list-items li button {
+            background: none;
+            box-shadow: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #ef4444; /* Red for delete */
+        }
+        #todo-list-items li button:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+            transform: none;
+        }
+
+        /* Shortcuts Zone (Time/Date) */
+        #shortcuts-zone {
+            background-color: rgba(0, 0, 0, 0.5); /* Keep it dark semi-transparent */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; /* Keep text white */
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+        }
+        body.light-mode #shortcuts-zone {
+            background-color: rgba(255, 255, 255, 0.5); /* Lighter semi-transparent */
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: black; /* Dark text for light mode */
+        }
+
+        /* Desktop icons zone */
+        #desktop-icons-zone .desktop-icon:hover {
+            background-color: rgba(0, 0, 0, 0.2); /* Dark mode subtle hover */
+        }
+        body.light-mode #desktop-icons-zone .desktop-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Light mode subtle hover */
+        }
+
+        /* Settings category item active state */
+        .settings-category-item.active {
+            background-color: #005fba; /* Consistent blue */
+            color: white;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
     <!-- Login Screen -->
     <div id="login-screen">
@@ -396,7 +871,7 @@
             </div>
             <h2 class="welcome-message" id="welcome-message">Welcome Back, User Name</h2>
             <div class="mb-6 w-full">
-                <input type="password" id="password-input" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center" placeholder="Enter password (any input)" onkeyup="handleLoginEnter(event)">
+                <input type="password" id="password-input" class="w-full text-center" placeholder="Enter password (any input)" onkeyup="handleLoginEnter(event)">
             </div>
             <button onclick="attemptLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg">
                 Sign In
@@ -473,7 +948,7 @@
             <div class="flex-grow"></div>
 
             <!-- Right Zone: Shortcuts (Time, Date) -->
-            <div id="shortcuts-zone" class="w-1/4 min-w-[150px] max-w-[250px] p-4 bg-gray-800 bg-opacity-70 rounded-lg backdrop-blur-md flex flex-col justify-between cursor-pointer" onclick="openApp('Date and Time', 'date-time')">
+            <div id="shortcuts-zone" class="w-1/4 min-w-[150px] max-w-[250px] p-4 rounded-lg backdrop-blur-md flex flex-col justify-between cursor-pointer" onclick="openApp('Date and Time', 'date-time')">
                 <div class="text-center">
                     <div class="text-5xl font-light font-['Source_Sans_3']" id="desktop-time"></div>
                     <div class="text-xl mt-2 font-['Source_Sans_3']" id="desktop-date"></div>
@@ -488,22 +963,22 @@
         </div>
 
         <!-- Start Menu -->
-        <div id="start-menu" class="start-menu hidden bg-gray-800 bg-opacity-95 backdrop-blur-md rounded-lg p-4 shadow-xl z-50">
+        <div id="start-menu" class="start-menu hidden backdrop-blur-md rounded-lg p-4 shadow-xl z-50">
             <!-- Left Panel: Recent Apps -->
             <div class="w-1/3 border-r border-gray-700 pr-4 overflow-y-auto">
                 <h2 class="text-lg font-semibold mb-4 text-blue-400">Recent Apps</h2>
                 <ul id="recent-apps-list" class="space-y-2">
                     <!-- Dynamically populated recent apps - example entries for now -->
-                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('File Explorer', 'file-explorer'); toggleStartMenu()">
+                    <li class="start-menu-item" onclick="openApp('File Explorer', 'file-explorer'); toggleStartMenu()">
                         <i class="fa-solid fa-folder-open text-blue-400 text-xl mr-2"></i> File Explorer
                     </li>
-                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Browser', 'browser'); toggleStartMenu()">
+                    <li class="start-menu-item" onclick="openApp('Browser', 'browser'); toggleStartMenu()">
                         <i class="fa-solid fa-globe text-purple-400 text-xl mr-2"></i> Browser
                     </li>
-                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Terminal', 'terminal'); toggleStartMenu()">
+                    <li class="start-menu-item" onclick="openApp('Terminal', 'terminal'); toggleStartMenu()">
                         <i class="fa-solid fa-terminal text-green-400 text-xl mr-2"></i> Terminal
                     </li>
-                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Settings', 'settings'); toggleStartMenu()">
+                    <li class="start-menu-item" onclick="openApp('Settings', 'settings'); toggleStartMenu()">
                         <i class="fa-solid fa-gear text-gray-400 text-xl mr-2"></i> Settings
                     </li>
                 </ul>
@@ -512,6 +987,18 @@
             <!-- Middle Panel: Updates -->
             <div class="w-1/3 border-r border-gray-700 px-4 overflow-y-auto">
                 <h2 class="text-lg font-semibold mb-4 text-blue-400">Windows 13 Updates</h2>
+                <!-- NEW UPDATE ENTRY START -->
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
+                    <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
+                    <p class="text-gray-300 text-sm">
+                        This update introduces significant visual enhancements, allowing users to customize their desktop
+                        backgrounds with both predefined options and custom image URLs. Additionally, the login screen
+                        now includes improved informational displays, providing clearer feedback during the sign-in process.
+                        These changes aim to personalize the user experience and streamline initial system access.
+                    </p>
+                </div>
+                <!-- NEW UPDATE ENTRY END -->
                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                     <p class="font-bold text-lg mb-2">Version: 0.3.9</p>
                     <p class="text-blue-400 mb-2">Codename: Layout change & Start Menu change</p>
@@ -580,10 +1067,10 @@
         </div>
 
         <!-- Desktop Context Menu -->
-        <div id="desktop-context-menu" class="context-menu hidden bg-gray-800 bg-opacity-95 backdrop-blur-md rounded-lg p-2 shadow-xl z-50 text-sm">
-            <div class="py-1 px-3 hover:bg-blue-700 rounded-md cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); hideContextMenu()">Display settings</div>
-            <div class="py-1 px-3 hover:bg-blue-700 rounded-md cursor-pointer" onclick="showMessage('Personalize opened!'); hideContextMenu()">Personalize</div>
-            <div class="py-1 px-3 hover:bg-blue-700 rounded-md cursor-pointer" onclick="showMessage('New folder created!'); hideContextMenu()">New Folder</div>
+        <div id="desktop-context-menu" class="context-menu hidden backdrop-blur-md rounded-lg p-2 shadow-xl z-50 text-sm">
+            <div class="py-1 px-3 rounded-md cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); hideContextMenu()">Display settings</div>
+            <div class="py-1 px-3 rounded-md cursor-pointer" onclick="showMessage('Personalize opened!'); hideContextMenu()">Personalize</div>
+            <div class="py-1 px-3 rounded-md cursor-pointer" onclick="showMessage('New folder created!'); hideContextMenu()">New Folder</div>
         </div>
 
     </div>
@@ -1020,6 +1507,31 @@
         if (selectedSidebarItem) {
             selectedSidebarItem.classList.add('active');
         }
+
+        // Special handling for "Accounts" and "Personalization" to load/update data
+        if (categoryId === 'accounts') {
+            const accountsUsernameInput = settingsWindowElement.querySelector('#accounts-username-input');
+            const accountsPasswordInput = settingsWindowElement.querySelector('#accounts-password-input');
+            if (accountsUsernameInput) accountsUsernameInput.value = window.userPreferences.username;
+            if (accountsPasswordInput) accountsPasswordInput.value = window.userPreferences.password; // Insecure for production
+        } else if (categoryId === 'personalization') {
+            const currentWallpaperPreview = settingsWindowElement.querySelector('#current-wallpaper-preview');
+            if (currentWallpaperPreview) {
+                // Remove the "url()" and apply to background-image directly
+                currentWallpaperPreview.style.backgroundImage = window.desktopEnvContainer.style.getPropertyValue('--desktop-image');
+            }
+            const wallpaperUrlInput = settingsWindowElement.querySelector('#wallpaper-url-input');
+            if (wallpaperUrlInput) {
+                // Set the input value to the current wallpaper URL (if not a predefined one)
+                const currentWallpaper = window.userPreferences.wallpaperUrl;
+                // If it's a predefined asset, don't show the URL in the input
+                if (!currentWallpaper.startsWith('Assets/Background/')) {
+                    wallpaperUrlInput.value = currentWallpaper;
+                } else {
+                    wallpaperUrlInput.value = ''; // Clear if it's a default asset
+                }
+            }
+        }
     }
 
     // Open Application Window
@@ -1052,8 +1564,8 @@
 
             const windowElement = document.createElement('div');
             windowElement.id = `window-${appId}`;
-            // Changed overflow-hidden to overflow-auto for main window content
-            windowElement.className = `window bg-gray-900 bg-opacity-95 backdrop-blur-lg border border-gray-700 text-gray-100 flex flex-col opening`;
+            // Removed specific Tailwind classes here to rely on CSS variables for theming
+            windowElement.className = `window flex flex-col opening`;
             windowElement.style.zIndex = zIndexCounter;
             windowElement.style.width = '70%'; // Initial width
             windowElement.style.height = '70%'; // Initial height
@@ -1065,34 +1577,39 @@
 
             let contentHTML = '';
             let iconHTML = ''; // Use iconHTML for the actual icon/image tag
+            let bigIconHTML = ''; // For the large icon in the content area
 
             switch (appId) {
                 case 'file-explorer':
                     iconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-lg"></i>';
+                    bigIconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto">
-                            <h3 class="text-xl font-semibold mb-3">My PC</h3>
-                            <ul class="space-y-2">
-                                <li class="flex items-center gap-2">
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center relative">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                ${bigIconHTML}
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3 relative z-10">My PC</h3>
+                            <ul class="space-y-2 text-center relative z-10">
+                                <li class="flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-hard-drive text-gray-500"></i> Local Disk (C:)
                                 </li>
-                                <li class="flex items-center gap-2">
+                                <li class="flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-folder text-yellow-500"></i> Documents
                                 </li>
-                                <li class="flex items-center gap-2">
+                                <li class="flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-folder text-yellow-500"></i> Downloads
                                 </li>
-                                <li class="flex items-center gap-2">
+                                <li class="flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-image text-purple-500"></i> Pictures
                                 </li>
-                                <li class="flex items-center gap-2">
+                                <li class="flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-music text-green-500"></i> Music
                                 </li>
-                                <li class="flex items-center gap-2">
+                                <li class="flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-video text-red-500"></i> Videos
                                 </li>
                             </ul>
-                            <div class="mt-4 p-3 bg-gray-800 rounded-md">
+                            <div class="mt-4 p-3 bg-gray-800 rounded-md relative z-10">
                                 <p class="text-sm">Welcome to your Windows 13 File Explorer! This is a simplified concept.</p>
                             </div>
                         </div>
@@ -1100,48 +1617,58 @@
                     break;
                 case 'browser':
                     iconHTML = '<i class="fa-solid fa-globe text-purple-400 text-lg"></i>';
+                    bigIconHTML = '<i class="fa-solid fa-globe text-purple-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
-                        <div class="flex items-center p-2 bg-gray-800 rounded-b-none border-b border-gray-700">
-                            <input type="text" class="flex-grow bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="https://www.conceptbrowser.com" readonly>
-                            <button class="ml-2 p-1 rounded-full hover:bg-gray-600 text-gray-400"><i class="fa-solid fa-sync"></i></button>
+                        <div class="flex items-center p-2 bg-gray-800 rounded-b-none border-b border-gray-700 relative z-10">
+                            <input type="text" class="flex-grow rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="https://www.conceptbrowser.com" readonly>
+                            <button class="ml-2 p-1 rounded-full text-gray-400"><i class="fa-solid fa-sync"></i></button>
                         </div>
-                        <div class="p-4 flex-grow overflow-auto text-center flex flex-col items-center justify-center">
-                            <i class="fa-solid fa-fire text-orange-500 text-6xl mb-4"></i>
-                            <p class="text-lg text-gray-400">Welcome to the future of browsing!</p>
-                            <p class="text-sm text-gray-500 mt-2">This is a conceptual browser for Windows 13.</p>
+                        <div class="p-4 flex-grow overflow-auto text-center flex flex-col items-center justify-center relative">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                ${bigIconHTML}
+                            </div>
+                            <p class="text-lg text-gray-400 relative z-10">Welcome to the future of browsing!</p>
+                            <p class="text-sm text-gray-500 mt-2 relative z-10">This is a conceptual browser for Windows 13.</p>
                         </div>
                     `;
                     break;
                 case 'terminal':
                     iconHTML = '<i class="fa-solid fa-terminal text-green-400 text-lg"></i>';
+                    bigIconHTML = '<i class="fa-solid fa-terminal text-green-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
-                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-green-300 rounded-b-lg">
-                            <p><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ ls -la</p>
-                            <p class="text-yellow-300">total 16</p>
-                            <p>drwxr-xr-x 4 user user 4096 Jun 15 05:26 .</p>
-                            <p>drwxr-xr-x 3 user user 4096 Jun 15 05:20 ..</p>
-                            <p>drwxr-xr-x 2 user user 4096 Jun 15 05:26 Documents</p>
-                            <p>drwxr-xr-x 2 user user 4096 Jun 15 05:26 Desktop</p>
-                            <p><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ echo "Hello from Windows 13!"</p>
-                            <p>Hello from Windows 13!</p>
-                            <p><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ _</p>
+                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-green-300 rounded-b-lg relative">
+                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                ${bigIconHTML}
+                            </div>
+                            <p class="relative z-10"><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ ls -la</p>
+                            <p class="text-yellow-300 relative z-10">total 16</p>
+                            <p class="relative z-10">drwxr-xr-x 4 user user 4096 Jun 15 05:26 .</p>
+                            <p class="relative z-10">drwxr-xr-x 3 user user 4096 Jun 15 05:20 ..</p>
+                            <p class="relative z-10">drwxr-xr-x 2 user user 4096 Jun 15 05:26 Documents</p>
+                            <p class="relative z-10">drwxr-xr-x 2 user user 4096 Jun 15 05:26 Desktop</p>
+                            <p class="relative z-10"><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ echo "Hello from Windows 13!"</p>
+                            <p class="relative z-10">Hello from Windows 13!</p>
+                            <p class="relative z-10"><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ _</p>
                         </div>
                     `;
                     break;
                 case 'solar-panel':
                     iconHTML = '<i class="fa-solid fa-solar-panel text-yellow-400 text-lg"></i>';
+                    bigIconHTML = '<i class="fa-solid fa-solar-panel text-yellow-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
-                            <i class="fa-solid fa-solar-panel text-yellow-400 text-6xl mb-4"></i>
-                            <h3 class="text-2xl font-bold text-yellow-300 mb-2">Solar Panel Dashboard</h3>
-                            <p class="text-gray-300 max-w-sm">
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center relative">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                ${bigIconHTML}
+                            </div>
+                            <h3 class="text-2xl font-bold text-yellow-300 mb-2 relative z-10">Solar Panel Dashboard</h3>
+                            <p class="text-gray-300 max-w-sm relative z-10">
                                 Monitor your solar energy production and consumption in real-time. This is a conceptual application.
                             </p>
-                            <div class="mt-4 text-sm">
+                            <div class="mt-4 text-sm relative z-10">
                                 <p>Current Output: <span class="font-bold text-green-400">1.2 kW</span></p>
                                 <p>Daily Production: <span class="font-bold text-blue-400">8.5 kWh</span></p>
                             </div>
-                            <button class="mt-6 px-6 py-2 bg-gradient-to-r from-yellow-600 to-orange-500 text-white rounded-full shadow-lg hover:from-yellow-700 hover:to-orange-600 transition-all">
+                            <button class="mt-6 bg-gradient-to-r from-yellow-600 to-orange-500 text-white rounded-full shadow-lg hover:from-yellow-700 hover:to-orange-600 relative z-10">
                                 View Analytics
                             </button>
                         </div>
@@ -1149,6 +1676,7 @@
                     break;
                 case 'settings':
                     iconHTML = '<i class="fa-solid fa-gear text-gray-400 text-lg"></i>';
+                    // Settings app has a sidebar, so the main icon isn't needed in content
                     contentHTML = `
                         <div class="flex flex-row flex-grow">
                             <div class="settings-sidebar">
@@ -1185,7 +1713,7 @@
                                         </div>
                                         <div>
                                             <label for="sound-output" class="block text-sm font-medium text-gray-400 mb-1">Sound Output</label>
-                                            <select id="sound-output" class="w-full p-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <select id="sound-output" class="w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                                 <option>Speakers (Realtek Audio)</option>
                                                 <option>Headphones</option>
                                             </select>
@@ -1213,21 +1741,49 @@
                                 <div id="personalization-content" class="hidden">
                                     <h4 class="text-xl font-semibold mb-4">Personalization</h4>
                                     <p class="text-gray-300 mb-4">Change your background, colors, lock screen, and themes.</p>
-                                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="showMessage('Wallpaper changed (conceptual)!');">Change Background</button>
+                                    <div class="flex flex-col gap-4">
+                                        <h5 class="font-semibold text-gray-200">Desktop Background</h5>
+                                        <div id="current-wallpaper-preview" class="w-full h-32 bg-gray-700 rounded-lg bg-cover bg-center mb-2" style="background-image: var(--desktop-image);"></div>
+                                        <p class="text-sm text-gray-400 mb-2">Choose from predefined or enter a custom URL.</p>
+
+                                        <div class="grid grid-cols-2 gap-2 mb-4">
+                                            <img src="Assets/Background/BackgroundV2.png" alt="Default Wallpaper" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('Assets/Background/BackgroundV2.png', this)">
+                                            <img src="https://placehold.co/400x240/007bff/ffffff?text=Blue+Gradient" alt="Blue Gradient" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/007bff/ffffff?text=Blue+Gradient', this)">
+                                            <img src="https://placehold.co/400x240/28a745/ffffff?text=Green+Pattern" alt="Green Pattern" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/28a745/ffffff?text=Green+Pattern', this)">
+                                            <img src="https://placehold.co/400x240/6f42c1/ffffff?text=Purple+Abstract" alt="Purple Abstract" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/6f42c1/ffffff?text=Purple+Abstract', this)">
+                                        </div>
+
+                                        <label for="wallpaper-url-input" class="block text-sm font-medium text-gray-400 mb-1">Custom Wallpaper URL</label>
+                                        <input type="text" id="wallpaper-url-input" class="w-full" placeholder="Enter image URL">
+                                        <button class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="applyCustomWallpaper()">Apply Custom Wallpaper</button>
+                                        <button class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="saveUserPreferences()">Save Wallpaper</button>
+                                    </div>
                                 </div>
 
                                 <!-- Accounts Content -->
                                 <div id="accounts-content" class="hidden">
                                     <h4 class="text-xl font-semibold mb-4">Accounts</h4>
-                                    <p class="text-gray-300 mb-4">Manage your user accounts, sign-in options, and family settings.</p>
-                                    <div class="flex items-center gap-4 p-3 bg-gray-800 rounded-md">
-                                        <div class="profile-pic-login w-16 h-16 text-3xl mx-0 my-0">
-                                            <i class="fa-solid fa-user"></i>
+                                    <p class="text-gray-300 mb-4">Manage your user accounts and sign-in options.</p>
+                                    <div class="flex flex-col gap-4">
+                                        <div class="flex items-center gap-4 p-3 bg-gray-800 rounded-md">
+                                            <div class="profile-pic-login w-16 h-16 text-3xl mx-0 my-0">
+                                                <i class="fa-solid fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-lg" id="current-username-display">User Name</p>
+                                                <p class="text-sm text-gray-400">Administrator</p>
+                                            </div>
                                         </div>
                                         <div>
-                                            <p class="font-bold text-lg">User Name</p>
-                                            <p class="text-sm text-gray-400">Administrator</p>
+                                            <label for="accounts-username-input" class="block text-sm font-medium text-gray-400 mb-1">Change Username</label>
+                                            <input type="text" id="accounts-username-input" class="w-full" placeholder="New Username" value="${window.userPreferences.username}">
                                         </div>
+                                        <div>
+                                            <label for="accounts-password-input" class="block text-sm font-medium text-gray-400 mb-1">Change Password</label>
+                                            <input type="password" id="accounts-password-input" class="w-full" placeholder="New Password (for demo only)" value="${window.userPreferences.password}">
+                                            <p class="text-xs text-red-400 mt-1">Warning: In a real application, passwords should be hashed and never stored directly.</p>
+                                        </div>
+                                        <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="updateAccountDetails()">Save Account Changes</button>
                                     </div>
                                 </div>
 
@@ -1270,13 +1826,15 @@
                     break;
                 case 'about-windows':
                     iconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-5 h-5">'; // Smaller for header
+                    bigIconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-20 h-20 mb-4 opacity-50">'; // Larger, semi-transparent
                     contentHTML = `
-                        <div class="flex flex-col flex-grow">
+                        <div class="flex flex-col flex-grow relative">
                             <div class="flex border-b border-gray-700">
                                 <button id="about-tab-btn" class="px-4 py-2 border-r border-gray-700 bg-blue-700 rounded-t-lg transition-colors">About</button>
                                 <button id="updates-tab-btn" class="px-4 py-2 rounded-t-lg hover:bg-gray-700 transition-colors">Updates</button>
                             </div>
-                            <div id="about-content" class="p-4 flex-grow overflow-auto">
+                            <div id="about-content" class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
+                                ${bigIconHTML}
                                 <h3 class="text-xl font-semibold mb-3">About Windows 13 Concept</h3>
                                 <p class="text-gray-300 mb-4">
                                     Welcome to Windows 13, a conceptual operating system designed to showcase modern UI/UX principles.
@@ -1287,8 +1845,21 @@
                                     <a href="https://lttthedev.github.io/desktop.html" target="_blank" class="text-blue-400 hover:underline">Windows 12 demo website</a>.
                                 </p>
                             </div>
-                            <div id="updates-content" class="p-4 flex-grow overflow-auto hidden">
+                            <div id="updates-content" class="p-4 flex-grow overflow-auto hidden flex flex-col items-center justify-center text-center">
+                                ${bigIconHTML}
                                 <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
+                                <!-- NEW UPDATE ENTRY START -->
+                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                                    <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
+                                    <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
+                                    <p class="text-gray-300">
+                                        This update introduces significant visual enhancements, allowing users to customize their desktop
+                                        backgrounds with both predefined options and custom image URLs. Additionally, the login screen
+                                        now includes improved informational displays, providing clearer feedback during the sign-in process.
+                                        These changes aim to personalize the user experience and streamline initial system access.
+                                    </p>
+                                </div>
+                                <!-- NEW UPDATE ENTRY END -->
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: 0.3.9</p>
                                     <p class="text-blue-400 mb-2">Codename: Layout change & Start Menu change</p>
@@ -1337,174 +1908,26 @@
                         </div>
                     `;
                     break;
-                case 'calculator':
-                    iconHTML = '<i class="fa-solid fa-calculator text-red-400 text-lg"></i>';
-                    contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center">
-                            <div class="bg-gray-700 p-4 rounded-lg shadow-lg">
-                                <input type="text" id="calc-display" class="w-full text-right text-3xl font-mono bg-gray-900 text-white rounded-md p-2 mb-4" value="0" readonly>
-                                <div class="grid grid-cols-4 gap-2">
-                                    <button class="calc-btn col-span-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">C</button>
-                                    <button class="calc-btn bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">&larr;</button>
-                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">/</button>
-
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">7</button>
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">8</button>
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">9</button>
-                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">*</button>
-
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">4</button>
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">5</button>
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">6</button>
-                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">-</button>
-
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">1</button>
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">2</button>
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">3</button>
-                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">+</button>
-
-                                    <button class="calc-btn col-span-2 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">0</button>
-                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">.</button>
-                                    <button class="calc-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">=</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    break;
-                case 'image-viewer':
-                    iconHTML = '<i class="fa-solid fa-image text-pink-400 text-lg"></i>';
-                    contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center">
-                            <img src="https://placehold.co/400x300/F0F0F0/ADADAD?text=Image+Placeholder" alt="Placeholder Image" class="max-w-full max-h-full object-contain rounded-lg shadow-md mb-4">
-                            <p class="text-gray-300">A conceptual image viewer. Click to load another image.</p>
-                            <button class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Loading next image (conceptual)...');">
-                                Next Image
-                            </button>
-                        </div>
-                    `;
-                    break;
-                case 'todo-list':
-                    iconHTML = '<i class="fa-solid fa-list-check text-green-400 text-lg"></i>';
-                    contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto flex flex-col">
-                            <h3 class="text-xl font-semibold mb-3">My To-Do List</h3>
-                            <div class="flex mb-4 gap-2">
-                                <input type="text" id="todo-input" class="flex-grow p-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Add a new task...">
-                                <button id="add-todo-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md">Add Task</button>
-                            </div>
-                            <ul id="todo-list-items" class="space-y-2 flex-grow overflow-auto">
-                                <!-- To-Do items will be added here dynamically -->
-                                <li class="flex items-center bg-gray-800 p-2 rounded-md justify-between">
-                                    <span>Sample Task 1</span>
-                                    <button class="text-red-400 hover:text-red-500 text-sm" onclick="this.parentElement.remove()">Delete</button>
-                                </li>
-                                <li class="flex items-center bg-gray-800 p-2 rounded-md justify-between">
-                                    <span>Sample Task 2 (Completed)</span>
-                                    <button class="text-red-400 hover:text-red-500 text-sm" onclick="this.parentElement.remove()">Delete</button>
-                                </li>
-                            </ul>
-                        </div>
-                    `;
-                    break;
-                case 'weather':
-                    iconHTML = '<i class="fa-solid fa-cloud-sun-rain text-blue-300 text-lg"></i>';
-                    contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
-                            <h3 class="text-2xl font-bold mb-4">Current Weather</h3>
-                            <div class="flex items-center justify-center gap-4 text-white mb-6">
-                                <i class="fa-solid fa-cloud-sun text-6xl text-yellow-400"></i>
-                                <div>
-                                    <p class="text-5xl font-light">25°C</p>
-                                    <p class="text-lg text-gray-300">Partly Cloudy</p>
-                                </div>
-                            </div>
-                            <p class="text-xl mb-2">Location: Mount Vernon, Indiana</p>
-                            <div class="text-md text-gray-300 space-y-1">
-                                <p>Humidity: 65%</p>
-                                <p>Wind: 10 km/h NW</p>
-                                <p>Feels like: 27°C</p>
-                            </div>
-                            <button class="mt-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Fetching updated weather (conceptual)...');">
-                                Refresh Weather
-                            </button>
-                        </div>
-                    `;
-                    break;
-                case 'date-time':
-                    iconHTML = '<i class="fa-solid fa-clock text-blue-400 text-lg"></i>';
-                    contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
-                            <h3 class="text-2xl font-bold mb-4">Date and Time</h3>
-                            <div class="text-6xl font-light font-['Source_Sans_3'] mb-2" id="app-time"></div>
-                            <div class="text-2xl font-light font-['Source_Sans_3'] mb-6" id="app-date"></div>
-                            <p class="text-gray-300">Current system date and time.</p>
-                            <p class="text-sm text-gray-500 mt-2">This is a conceptual date/time application.</p>
-                        </div>
-                    `;
-                    break;
-                case 'display-settings':
-                    iconHTML = '<i class="fa-solid fa-display text-blue-400 text-lg"></i>';
-                    contentHTML = `
-                        <div class="p-4 flex-grow overflow-auto">
-                            <h3 class="text-xl font-semibold mb-4">Display Settings</h3>
-                            <div class="space-y-6">
-                                <div>
-                                    <label for="resolution" class="block text-sm font-medium text-gray-400 mb-1">Resolution</label>
-                                    <select id="resolution" class="w-full p-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="1920x1080">1920 x 1080 (Recommended)</option>
-                                        <option value="1366x768">1366 x 768</option>
-                                        <option value="1280x720">1280 x 720</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="scale" class="block text-sm font-medium text-gray-400 mb-1">Scale (Text, apps, and other items)</label>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm text-gray-400">100%</span>
-                                        <input type="range" id="scale" min="100" max="200" value="100" step="25" class="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
-                                        <span class="text-sm text-gray-400" id="scale-value">100%</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label for="brightness" class="block text-sm font-medium text-gray-400 mb-1">Brightness</label>
-                                    <div class="flex items-center gap-2">
-                                        <i class="fa-solid fa-sun text-yellow-400"></i>
-                                        <input type="range" id="brightness" min="0" max="100" value="75" class="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
-                                        <i class="fa-solid fa-sun text-yellow-400"></i>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label for="night-light" class="text-sm font-medium text-gray-400">Night light</label>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="night-light" value="" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="mt-8 text-center">
-                                <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Display settings applied (conceptual)!');">Apply</button>
-                            </div>
-                        </div>
-                    `;
-                    break;
                 default:
                     iconHTML = '<i class="fa-solid fa-cube text-gray-400 text-lg"></i>';
-                    contentHTML = `<div class="p-4 flex-grow overflow-auto"><h1>${appName}</h1><p>Welcome to ${appName}!</p></div>`;
+                    bigIconHTML = '<i class="fa-solid fa-cube text-gray-400 text-8xl mb-4 opacity-50"></i>';
+                    contentHTML = `<div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center relative"><div class="absolute inset-0 flex items-center justify-center pointer-events-none">${bigIconHTML}</div><h1>${appName}</h1><p>Welcome to ${appName}!</p></div>`;
             }
 
             windowElement.innerHTML = `
-                <div class="window-header flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
+                <div class="window-header flex items-center justify-between p-3">
                     <div class="flex items-center gap-2">
                         ${iconHTML}
                         <span class="text-md font-semibold">${appName}</span>
                     </div>
                     <div class="flex space-x-2">
-                        <button class="minimize-btn w-6 h-6 rounded-md hover:bg-gray-700 flex items-center justify-center text-gray-400">
+                        <button class="minimize-btn">
                             <i class="fa-solid fa-minus"></i>
                         </button>
-                        <button class="maximize-restore-btn w-6 h-6 rounded-md hover:bg-gray-700 flex items-center justify-center text-gray-400">
+                        <button class="maximize-restore-btn">
                             <i class="fa-regular fa-square"></i>
                         </button>
-                        <button class="close-btn w-6 h-6 rounded-md hover:bg-red-700 flex items-center justify-center text-gray-400 hover:text-white">
+                        <button class="close-btn">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
@@ -1556,6 +1979,22 @@
                 setTimeout(() => {
                     initializeDisplaySettings(windowElement);
                 }, 100); // Small delay to ensure elements are rendered
+                    const themeModeToggle = windowElement.querySelector('#theme-mode');
+                    if (themeModeToggle) {
+                        // Initialize the toggle state based on current body class
+                        themeModeToggle.checked = document.body.classList.contains('light-mode');
+
+                        themeModeToggle.addEventListener('change', () => {
+                            if (themeModeToggle.checked) {
+                                document.body.classList.add('light-mode');
+                                window.userPreferences.theme = 'light-mode';
+                            } else {
+                                document.body.classList.remove('light-mode');
+                                window.userPreferences.theme = 'dark-mode';
+                            }
+                            saveUserPreferences(); // Save theme preference
+                        });
+                    }
             }
             // Initialize Settings logic if the Settings app was just opened
             if (appId === 'settings') {
@@ -1746,11 +2185,6 @@
         if (scaleSlider && scaleValueSpan) {
             scaleSlider.addEventListener('input', () => {
                 scaleValueSpan.textContent = `${scaleSlider.value}%`;
-                // For a more 'real' effect, we could scale the desktop,
-                // but it might interfere with window dragging/resizing.
-                // For now, it's a conceptual display.
-                // desktopEnv.style.transform = `scale(${parseInt(scaleSlider.value) / 100})`;
-                // desktopEnv.style.transformOrigin = 'top left';
                 showMessage(`Desktop scale set to ${scaleSlider.value}% (conceptual)`);
             });
         }
@@ -1759,17 +2193,18 @@
         if (brightnessSlider && desktopEnv) {
             // Set initial brightness based on slider value
             desktopEnv.style.setProperty('--desktop-brightness-value', `${brightnessSlider.value}%`);
-            if (!desktopEnv.classList.contains('night-light-active')) { // Apply only if night light is not active
+            // Apply initial filter based on whether night light is active
+            if (!desktopEnv.classList.contains('night-light-active')) {
                  desktopEnv.style.filter = `brightness(${brightnessSlider.value}%)`;
+            } else {
+                desktopEnv.style.filter = `brightness(${brightnessSlider.value}%) sepia(0.3) hue-rotate(-20deg)`;
             }
-
 
             brightnessSlider.addEventListener('input', () => {
                 desktopEnv.style.setProperty('--desktop-brightness-value', `${brightnessSlider.value}%`);
-                if (!desktopEnv.classList.contains('night-light-active')) { // Adjust only if night light is not active
-                    desktopEnv.style.filter = `brightness(${brightnessSlider.value}%) sepia(0.3) hue-rotate(-20deg)`;
+                if (!desktopEnv.classList.contains('night-light-active')) {
+                    desktopEnv.style.filter = `brightness(${brightnessSlider.value}%)`;
                 } else {
-                    // If night light is active, ensure its filter combines with brightness
                     desktopEnv.style.filter = `brightness(${brightnessSlider.value}%) sepia(0.3) hue-rotate(-20deg)`;
                 }
             });
@@ -1777,24 +2212,15 @@
 
         // --- Night Light Toggle ---
         if (nightLightToggle && desktopEnv) {
-            // Set initial night light state
-            if (nightLightToggle.checked) {
-                desktopEnv.classList.add('night-light-active');
-            }
-            else {
-                desktopEnv.classList.remove('night-light-active');
-                // Reset filter if night light is off, respecting brightness
-                desktopEnv.style.filter = `brightness(${brightnessSlider.value || 100}%)`;
-            }
+            // Set initial night light state based on its class
+            nightLightToggle.checked = desktopEnv.classList.contains('night-light-active');
 
             nightLightToggle.addEventListener('change', () => {
                 if (nightLightToggle.checked) {
                     desktopEnv.classList.add('night-light-active');
-                    // Ensure brightness is still applied when night light is on
                     desktopEnv.style.filter = `brightness(${brightnessSlider.value || 100}%) sepia(0.3) hue-rotate(-20deg)`;
                 } else {
                     desktopEnv.classList.remove('night-light-active');
-                    // Reset filter to just brightness when night light is off
                     desktopEnv.style.filter = `brightness(${brightnessSlider.value || 100}%)`;
                 }
             });
@@ -1807,7 +2233,79 @@
                 showMessage(`Resolution set to ${resolutionSelect.value} (conceptual)`);
             });
         }
+
+        // --- Theme Mode Toggle (Light/Dark) ---
+        const themeModeToggle = displaySettingsWindowElement.querySelector('#theme-mode');
+        if (themeModeToggle) {
+            // Initialize the toggle state based on current body class
+            themeModeToggle.checked = document.body.classList.contains('light-mode');
+
+            themeModeToggle.addEventListener('change', () => {
+                if (themeModeToggle.checked) {
+                    document.body.classList.add('light-mode');
+                    window.userPreferences.theme = 'light-mode';
+                } else {
+                    document.body.classList.remove('light-mode');
+                    window.userPreferences.theme = 'dark-mode';
+                }
+                saveUserPreferences(); // Save theme preference
+            });
+        }
     }
+
+    // Functions for Personalization section
+    function selectWallpaper(url, element) {
+        const currentWallpaperPreview = document.querySelector('#current-wallpaper-preview');
+        const wallpaperUrlInput = document.querySelector('#wallpaper-url-input');
+
+        // Update preview
+        if (currentWallpaperPreview) {
+            currentWallpaperPreview.style.backgroundImage = `url('${url}')`;
+        }
+        // Update global preference
+        window.userPreferences.wallpaperUrl = url;
+        // Clear custom URL input if a predefined one is selected
+        if (wallpaperUrlInput) {
+            wallpaperUrlInput.value = '';
+        }
+
+        // Add a visual indicator for selected wallpaper (optional, but good UX)
+        document.querySelectorAll('#personalization-content img').forEach(img => {
+            img.classList.remove('border-blue-500');
+            img.classList.add('border-transparent');
+        });
+        element.classList.remove('border-transparent');
+        element.classList.add('border-blue-500');
+
+        showMessage('Wallpaper preview updated. Click "Save Wallpaper" to apply permanently.');
+    }
+
+    function applyCustomWallpaper() {
+        const wallpaperUrlInput = document.querySelector('#wallpaper-url-input');
+        if (wallpaperUrlInput && wallpaperUrlInput.value.trim() !== '') {
+            const url = wallpaperUrlInput.value.trim();
+            selectWallpaper(url, wallpaperUrlInput); // Pass input element as 'element' for selection highlight (optional)
+        } else {
+            showMessage('Please enter a valid image URL.');
+        }
+    }
+
+    // Function for Accounts section
+    function updateAccountDetails() {
+        const accountsUsernameInput = document.querySelector('#accounts-username-input');
+        const accountsPasswordInput = document.querySelector('#accounts-password-input');
+
+        if (accountsUsernameInput) {
+            window.userPreferences.username = accountsUsernameInput.value.trim();
+        }
+        if (accountsPasswordInput) {
+            // WARNING: Storing plain text password for demo purposes.
+            // In a real application, passwords must be securely hashed on the server side.
+            window.userPreferences.password = accountsPasswordInput.value;
+        }
+        saveUserPreferences();
+    }
+
 
     // --- Date and Time App Logic ---
     function updateDateTimeApp(appWindowElement) {
@@ -1889,13 +2387,10 @@
         document.addEventListener('mouseup', () => {
             document.body.style.cursor = 'default';
         });
-    }
 
-
-    // --- Event listener for window load ---
-    window.addEventListener('load', () => {
-        // Initialize global variables and attach listeners after DOM is loaded
-        initializeDesktopListeners();
+        // Initial update of time and date
+        updateTimeAndDate();
+        setInterval(updateTimeAndDate, 1000); // Update time every second
 
         // Set desktop to blurred state initially when the OS loads (before login)
         if (desktopEnvContainer) {
@@ -1913,10 +2408,9 @@
                 if (welcomeMessage) welcomeMessage.classList.add('show');
             }, 300);
         }
-
-        updateTimeAndDate(); // Initial call to update time/date after elements are assigned
-        setInterval(updateTimeAndDate, 1000); // Update time every second
-    });
+    }
+    // No explicit window.onload here, as Firebase initialization handles it now.
+    // The Firebase script module handles calling initializeDesktopListeners() and loadUserPreferences().
 </script>
 </body>
 </html>
