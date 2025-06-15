@@ -78,7 +78,7 @@
 
         .maximized {
             width: 100vw !important;
-            height: calc(100vh - 4rem) !important; /* Full height minus taskbar */
+            height: 100vh !important; /* Full height as there's no taskbar */
             top: 0 !important;
             left: 0 !important;
             transform: none !important;
@@ -91,13 +91,16 @@
 
         .start-menu {
             position: absolute;
-            bottom: 4rem; /* Above taskbar */
+            bottom: 0; /* Changed from 4rem to 0 to sit at the very bottom */
             left: 0.5rem;
-            width: 300px;
+            width: 900px; /* Wider to accommodate 3 columns */
+            max-width: 95vw;
+            height: 500px; /* Fixed height for consistent look */
             max-height: calc(100vh - 5rem);
-            overflow-y: auto;
+            overflow: hidden; /* Hide overflow for internal scrolling sections */
             transform-origin: bottom left;
             transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+            display: flex; /* Use flexbox for columns */
         }
 
         .start-menu.hidden {
@@ -156,7 +159,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: url('Assets/Background/Background2.png') no-repeat center center / cover;
+            background: url('Assets/Background/Background.png') no-repeat center center / cover;
             transition: filter 0.5s ease-out; /* Smooth transition for blur */
             z-index: 1; /* Below login screen initially */
             display: flex; /* Keep flex for its internal structure */
@@ -411,54 +414,71 @@
     <!-- Desktop Environment (initially blurred, then unblurred and active) -->
     <div id="desktop-env-container" class="w-full h-full flex flex-col">
         <!-- Actual Desktop Area (content above taskbar) -->
-        <div id="desktop" class="flex-grow grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 relative overflow-y-auto">
-            <!-- Desktop Icons -->
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="File Explorer" data-app-id="file-explorer">
-                <i class="fa-solid fa-folder-open text-blue-400 text-4xl"></i>
-                <span class="text-sm mt-1">File Explorer</span>
+        <div id="desktop" class="flex-grow flex p-4 relative overflow-hidden">
+            <!-- Left Zone: Desktop Icons -->
+            <div id="desktop-icons-zone" class="w-1/4 min-w-[150px] max-w-[250px] overflow-y-auto pr-4">
+                <div class="flex flex-col gap-4">
+                    <!-- Desktop Icons -->
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="File Explorer" data-app-id="file-explorer">
+                        <i class="fa-solid fa-folder-open text-blue-400 text-4xl"></i>
+                        <span class="text-sm mt-1">File Explorer</span>
+                    </div>
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Browser" data-app-id="browser">
+                        <i class="fa-solid fa-globe text-purple-400 text-4xl"></i>
+                        <span class="text-sm mt-1">Browser</span>
+                    </div>
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Terminal" data-app-id="terminal">
+                        <i class="fa-solid fa-terminal text-green-400 text-4xl"></i>
+                        <span class="text-sm mt-1">Terminal</span>
+                    </div>
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Solar Panel" data-app-id="solar-panel">
+                        <i class="fa-solid fa-solar-panel text-yellow-400 text-4xl"></i>
+                        <span class="text-sm mt-1">Solar Panel</span>
+                    </div>
+                    <!-- New Settings App Icon -->
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Settings" data-app-id="settings">
+                        <i class="fa-solid fa-gear text-gray-400 text-4xl"></i>
+                        <span class="text-sm mt-1">Settings</span>
+                    </div>
+                    <!-- New About Windows App Icon -->
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="About Windows 13" data-app-id="about-windows">
+                        <img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-10 h-10">
+                        <span class="text-sm mt-1 text-center">About Windows 13</span>
+                    </div>
+                    <!-- New Calculator App Icon -->
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Calculator" data-app-id="calculator">
+                        <i class="fa-solid fa-calculator text-red-400 text-4xl"></i>
+                        <span class="text-sm mt-1">Calculator</span>
+                    </div>
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Image Viewer" data-app-id="image-viewer">
+                        <i class="fa-solid fa-image text-pink-400 text-4xl"></i>
+                        <span class="text-sm mt-1">Image Viewer</span>
+                    </div>
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="To-Do List" data-app-id="todo-list">
+                        <i class="fa-solid fa-list-check text-green-400 text-4xl"></i>
+                        <span class="text-sm mt-1">To-Do List</span>
+                    </div>
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Weather" data-app-id="weather">
+                        <i class="fa-solid fa-cloud-sun-rain text-blue-300 text-4xl"></i>
+                        <span class="text-sm mt-1">Weather</span>
+                    </div>
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Display Settings" data-app-id="display-settings">
+                        <i class="fa-solid fa-display text-blue-400 text-4xl"></i>
+                        <span class="text-sm mt-1 text-center">Display Settings</span>
+                    </div>
+                </div>
             </div>
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Browser" data-app-id="browser">
-                <i class="fa-solid fa-globe text-purple-400 text-4xl"></i>
-                <span class="text-sm mt-1">Browser</span>
-            </div>
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Terminal" data-app-id="terminal">
-                <i class="fa-solid fa-terminal text-green-400 text-4xl"></i>
-                <span class="text-sm mt-1">Terminal</span>
-            </div>
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Solar Panel" data-app-id="solar-panel">
-                <i class="fa-solid fa-solar-panel text-yellow-400 text-4xl"></i>
-                <span class="text-sm mt-1">Solar Panel</span>
-            </div>
-            <!-- New Settings App Icon -->
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Settings" data-app-id="settings">
-                <i class="fa-solid fa-gear text-gray-400 text-4xl"></i>
-                <span class="text-sm mt-1">Settings</span>
-            </div>
-            <!-- New About Windows App Icon -->
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="About Windows 13" data-app-id="about-windows">
-                <img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-10 h-10">
-                <span class="text-sm mt-1 text-center">About Windows 13</span>
-            </div>
-            <!-- New Calculator App Icon -->
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Calculator" data-app-id="calculator">
-                <i class="fa-solid fa-calculator text-red-400 text-4xl"></i>
-                <span class="text-sm mt-1">Calculator</span>
-            </div>
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Image Viewer" data-app-id="image-viewer">
-                <i class="fa-solid fa-image text-pink-400 text-4xl"></i>
-                <span class="text-sm mt-1">Image Viewer</span>
-            </div>
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="To-Do List" data-app-id="todo-list">
-                <i class="fa-solid fa-list-check text-green-400 text-4xl"></i>
-                <span class="text-sm mt-1">To-Do List</span>
-            </div>
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Weather" data-app-id="weather">
-                <i class="fa-solid fa-cloud-sun-rain text-blue-300 text-4xl"></i>
-                <span class="text-sm mt-1">Weather</span>
-            </div>
-            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Display Settings" data-app-id="display-settings">
-                <i class="fa-solid fa-display text-blue-400 text-4xl"></i>
-                <span class="text-sm mt-1 text-center">Display Settings</span>
+
+            <!-- Center Zone (flexible empty space for now) -->
+            <div class="flex-grow"></div>
+
+            <!-- Right Zone: Shortcuts (Time, Date) -->
+            <div id="shortcuts-zone" class="w-1/4 min-w-[150px] max-w-[250px] p-4 bg-gray-800 bg-opacity-70 rounded-lg backdrop-blur-md flex flex-col justify-between cursor-pointer" onclick="openApp('Date and Time', 'date-time')">
+                <div class="text-center">
+                    <div class="text-5xl font-light font-['Source_Sans_3']" id="desktop-time"></div>
+                    <div class="text-xl mt-2 font-['Source_Sans_3']" id="desktop-date"></div>
+                </div>
+                <!-- Other quick links can be added here -->
             </div>
         </div>
 
@@ -469,62 +489,92 @@
 
         <!-- Start Menu -->
         <div id="start-menu" class="start-menu hidden bg-gray-800 bg-opacity-95 backdrop-blur-md rounded-lg p-4 shadow-xl z-50">
-            <h2 class="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">Start Menu</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('File Explorer', 'file-explorer'); toggleStartMenu()">
-                    <i class="fa-solid fa-folder-open text-blue-400 text-2xl"></i>
-                    <span class="text-xs mt-1">File Explorer</span>
+            <!-- Left Panel: Recent Apps -->
+            <div class="w-1/3 border-r border-gray-700 pr-4 overflow-y-auto">
+                <h2 class="text-lg font-semibold mb-4 text-blue-400">Recent Apps</h2>
+                <ul id="recent-apps-list" class="space-y-2">
+                    <!-- Dynamically populated recent apps - example entries for now -->
+                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('File Explorer', 'file-explorer'); toggleStartMenu()">
+                        <i class="fa-solid fa-folder-open text-blue-400 text-xl mr-2"></i> File Explorer
+                    </li>
+                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Browser', 'browser'); toggleStartMenu()">
+                        <i class="fa-solid fa-globe text-purple-400 text-xl mr-2"></i> Browser
+                    </li>
+                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Terminal', 'terminal'); toggleStartMenu()">
+                        <i class="fa-solid fa-terminal text-green-400 text-xl mr-2"></i> Terminal
+                    </li>
+                    <li class="start-menu-item flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Settings', 'settings'); toggleStartMenu()">
+                        <i class="fa-solid fa-gear text-gray-400 text-xl mr-2"></i> Settings
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Middle Panel: Updates -->
+            <div class="w-1/3 border-r border-gray-700 px-4 overflow-y-auto">
+                <h2 class="text-lg font-semibold mb-4 text-blue-400">Windows 13 Updates</h2>
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-bold text-lg mb-2">Version: 0.3.9</p>
+                    <p class="text-blue-400 mb-2">Codename: Layout change & Start Menu change</p>
+                    <p class="text-gray-300 text-sm">
+                        This update brings a significant overhaul to the desktop layout.
+                        The taskbar has been removed, integrating its core functionalities into the Start Menu.
+                        The desktop now features a left-aligned icon zone and a right-aligned "Shortcuts" area,
+                        which prominently displays the time and date, now clickable to open the new "Date/Time" application.
+                    </p>
                 </div>
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Browser', 'browser'); toggleStartMenu()">
-                    <i class="fa-solid fa-globe text-purple-400 text-2xl"></i>
-                    <span class="text-xs mt-1">Browser</span>
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-bold text-lg mb-2">Version: 0.3.8</p>
+                    <p class="text-blue-400 mb-2">Codename: Scrolling added</p>
+                    <p class="text-gray-300 text-sm">
+                        This mini-update ensures that various application windows and content areas within the OS
+                        now correctly support scrolling when their content exceeds the visible area.
+                        This improves usability and access to information in apps like File Explorer, Terminal,
+                        and other dynamic content displays.
+                    </p>
                 </div>
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Terminal', 'terminal'); toggleStartMenu()">
-                    <i class="fa-solid fa-terminal text-green-400 text-2xl"></i>
-                    <span class="text-xs mt-1">Terminal</span>
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-bold text-lg mb-2">Version: 0.3.73</p>
+                    <p class="text-blue-400 mb-2">Codename: Boot up sound Update & Loading Update</p>
+                    <p class="text-gray-300 text-sm">
+                        This significant update enhances the user's initial experience by refining the boot-up sound for a more pleasing auditory feedback.
+                        Additionally, the loading spinner throughout the system has been redesigned to align with modern Windows aesthetics, offering a smoother and more visually appealing waiting indicator.
+                    </p>
                 </div>
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Solar Panel', 'solar-panel'); toggleStartMenu()">
-                    <i class="fa-solid fa-solar-panel text-yellow-400 text-2xl"></i>
-                    <span class="text-xs mt-1">Solar Panel</span>
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-bold text-lg mb-2">Version: 0.3.4</p>
+                    <p class="text-blue-400 mb-2">Codename: Login Patch & boot up sounds</p>
+                    <p class="text-gray-300 text-sm">
+                        This update revamps the login screen with a modern aesthetic and introduces a subtle boot-up sound for a more immersive experience.
+                    </p>
                 </div>
-                <!-- New Settings App Start Menu Item -->
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Settings', 'settings'); toggleStartMenu()">
-                    <i class="fa-solid fa-gear text-gray-400 text-2xl"></i>
-                    <span class="text-xs mt-1">Settings</span>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="font-bold text-lg mb-2">Version: 0.3.0</p>
+                    <p class="text-blue-400 mb-2">Codename: Desktop columns & a Windows Update setting (alpha version)</p>
+                    <p class="text-gray-300 text-sm">
+                        This update introduces a more organized desktop layout with columns and adds
+                        a conceptual Windows Update setting for future expansion.
+                    </p>
                 </div>
-                <!-- New About Windows App Start Menu Item -->
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('About Windows 13', 'about-windows'); toggleStartMenu()">
-                    <img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-8 h-8">
-                    <span class="text-xs mt-1 text-center">About Windows 13</span>
-                </div>
-                <!-- New Calculator App Start Menu Item -->
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Calculator', 'calculator'); toggleStartMenu()">
-                    <i class="fa-solid fa-calculator text-red-400 text-2xl"></i>
-                    <span class="text-xs mt-1">Calculator</span>
-                </div>
-                <!-- New Image Viewer App Start Menu Item -->
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Image Viewer', 'image-viewer'); toggleStartMenu()">
-                    <i class="fa-solid fa-image text-pink-400 text-2xl"></i>
-                    <span class="text-xs mt-1">Image Viewer</span>
-                </div>
-                <!-- NEW: To-Do List App Start Menu Item -->
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('To-Do List', 'todo-list'); toggleStartMenu()">
-                    <i class="fa-solid fa-list-check text-green-400 text-2xl"></i>
-                    <span class="text-xs mt-1">To-Do List</span>
-                </div>
-                <!-- NEW: Weather App Start Menu Item -->
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Weather', 'weather'); toggleStartMenu()">
-                    <i class="fa-solid fa-cloud-sun-rain text-blue-300 text-2xl"></i>
-                    <span class="text-xs mt-1">Weather</span>
-                </div>
-                 <!-- NEW: Display Settings Start Menu Item -->
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); toggleStartMenu()">
-                    <i class="fa-solid fa-display text-blue-400 text-2xl"></i>
-                    <span class="text-xs mt-1 text-center">Display Settings</span>
-                </div>
-                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="showMessage('Power Options!'); toggleStartMenu()">
-                    <i class="fa-solid fa-power-off text-red-400 text-2xl"></i>
-                    <span class="text-xs mt-1">Power</span>
+            </div>
+
+            <!-- Right Panel: Device Settings -->
+            <div class="w-1/3 pl-4">
+                <h2 class="text-lg font-semibold mb-4 text-blue-400">Device Settings</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Settings', 'settings'); toggleStartMenu()">
+                        <i class="fa-solid fa-gear text-gray-400 text-2xl"></i> <span class="text-xs mt-1">Settings</span>
+                    </div>
+                    <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Calculator', 'calculator'); toggleStartMenu()">
+                        <i class="fa-solid fa-calculator text-red-400 text-2xl"></i> <span class="text-xs mt-1">Calculator</span>
+                    </div>
+                    <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Browser', 'browser'); toggleStartMenu()">
+                        <i class="fa-solid fa-globe text-purple-400 text-2xl"></i> <span class="text-xs mt-1">Internet</span>
+                    </div>
+                    <!-- Changed from Display Settings to Volume, opens the same app -->
+                    <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); toggleStartMenu()">
+                        <i class="fa-solid fa-volume-high text-blue-400 text-2xl"></i> <span class="text-xs mt-1">Volume</span>
+                    </div>
+                    <!-- Add more device settings icons as needed -->
                 </div>
             </div>
         </div>
@@ -538,30 +588,13 @@
 
     </div>
 
-    <!-- Taskbar -->
-    <div class="h-16 bg-gray-800 bg-opacity-90 backdrop-blur-md flex items-center justify-between px-4 z-40">
-        <!-- Start Button -->
-        <button id="start-button" class="flex items-center justify-center w-12 h-12 rounded-full hover:bg-blue-600 focus:outline-none transition-colors" onclick="toggleStartMenu()">
-            <i class="fa-brands fa-windows text-blue-400 text-2xl"></i>
-        </button>
+    <!-- Start Button at bottom-left corner -->
+    <button id="start-button" class="absolute bottom-4 left-4 flex items-center justify-center w-12 h-12 rounded-full bg-gray-800 bg-opacity-90 backdrop-blur-md hover:bg-blue-600 focus:outline-none transition-colors z-40" onclick="toggleStartMenu()">
+        <i class="fa-brands fa-windows text-blue-400 text-2xl"></i>
+    </button>
 
-        <!-- Taskbar Icons for open applications -->
-        <div id="taskbar-apps" class="flex items-center space-x-2 flex-grow justify-center">
-            <!-- App icons will be dynamically added here -->
-        </div>
-
-        <!-- System Tray -->
-        <div class="flex items-center space-x-4 text-sm">
-            <span id="system-time"></span>
-            <span id="system-date"></span>
-            <i class="fa-solid fa-wifi"></i>
-            <i class="fa-solid fa-volume-high"></i>
-        </div>
-    </div>
-</div> <!-- End desktop-env-container -->
-
-<!-- Custom Message Box -->
-<div id="message-box" class="hidden"></div>
+    <!-- Custom Message Box -->
+    <div id="message-box" class="hidden"></div>
 
 <!-- Embedded JavaScript code -->
 <script>
@@ -576,10 +609,15 @@
     let welcomeMessage; // New variable for welcome message
 
     let desktop;
+    let desktopIconsZone; // New variable for desktop icons container
+    let shortcutsZone;    // New variable for shortcuts container
+    let desktopTimeDisplay; // New variable for desktop time
+    let desktopDateDisplay; // New variable for desktop date
+
     let windowsContainer;
     let startMenu;
     let startButton;
-    let taskbarApps;
+    // Taskbar apps removed
     let desktopContextMenu;
 
     let zIndexCounter = 1000;
@@ -621,7 +659,7 @@
 
     // --- Core OS Functions ---
 
-    // Function to update time and date for both login screen and taskbar
+    // Function to update time and date for both login screen and desktop shortcuts
     function updateTimeAndDate() {
         try {
             const now = new Date();
@@ -632,13 +670,10 @@
             if (loginTimeDisplay) loginTimeDisplay.textContent = now.toLocaleTimeString([], timeOptions);
             if (loginDateDisplay) loginDateDisplay.textContent = now.toLocaleDateString(undefined, dateOptions);
 
-            // Update taskbar time and date (if desktop is visible)
-            const systemTimeElement = document.getElementById('system-time');
-            const systemDateElement = document.getElementById('system-date');
-            // Only update if desktop-env-container is meant to be the active desktop (not blurred for login)
-            if (systemTimeElement && systemDateElement && desktopEnvContainer && desktopEnvContainer.classList.contains('desktop-active')) {
-                systemTimeElement.textContent = now.toLocaleTimeString([], timeOptions);
-                systemDateElement.textContent = now.toLocaleDateString();
+            // Update desktop shortcuts time and date (if desktop is visible)
+            if (desktopTimeDisplay && desktopDateDisplay && desktopEnvContainer && desktopEnvContainer.classList.contains('desktop-active')) {
+                desktopTimeDisplay.textContent = now.toLocaleTimeString([], timeOptions);
+                desktopDateDisplay.textContent = now.toLocaleDateString(undefined, dateOptions);
             }
         } catch (error) {
             console.error('Error in updateTimeAndDate:', error);
@@ -860,15 +895,14 @@
         const minimizeBtn = windowElement.querySelector('.minimize-btn');
         const maximizeRestoreBtn = windowElement.querySelector('.maximize-restore-btn');
         const closeBtn = windowElement.querySelector('.close-btn');
-        // taskbarIcon is retrieved inside openApp or through direct getElementById when needed.
+        // taskbarIcon handling is removed
 
         // Minimize
         if (minimizeBtn) {
             minimizeBtn.addEventListener('click', () => {
                 try {
-                    const currentTaskbarIcon = document.getElementById(`taskbar-icon-${appId}`); // Get it here
+                    // Minimized windows just hide, no taskbar icon
                     windowElement.classList.add('minimized');
-                    if (currentTaskbarIcon) currentTaskbarIcon.classList.remove('bg-blue-700'); // Remove active state from taskbar icon
                 } catch (error) {
                     console.error('Error minimizing window:', error);
                     showMessage(`Error minimizing ${appId}`);
@@ -923,40 +957,10 @@
                     windowElement.addEventListener('animationend', () => {
                         windowElement.remove();
                         delete openWindows[appId];
-                        const currentTaskbarIcon = document.getElementById(`taskbar-icon-${appId}`); // Get it here
-                        if (currentTaskbarIcon) currentTaskbarIcon.remove(); // Remove taskbar icon
                     }, { once: true }); // Ensure listener runs only once
                 } catch (error) {
                     console.error('Error closing window:', error);
                     showMessage(`Error closing ${appId}`);
-                }
-            });
-        }
-
-        // Taskbar icon click to minimize/restore/bring to front
-        const currentTaskbarIconForListener = document.getElementById(`taskbar-icon-${appId}`);
-        if (currentTaskbarIconForListener) {
-            currentTaskbarIconForListener.addEventListener('click', () => {
-                try {
-                    if (windowElement.classList.contains('minimized')) {
-                        windowElement.classList.remove('minimized');
-                        zIndexCounter++;
-                        windowElement.style.zIndex = zIndexCounter; // Bring to front
-                        currentTaskbarIconForListener.classList.add('bg-blue-700');
-                    } else {
-                        // If already open, bring to front or minimize
-                        if (parseInt(windowElement.style.zIndex) === zIndexCounter) {
-                            windowElement.classList.add('minimized');
-                            currentTaskbarIconForListener.classList.remove('bg-blue-700');
-                        } else {
-                            zIndexCounter++;
-                            windowElement.style.zIndex = zIndexCounter; // Bring to front
-                            currentTaskbarIconForListener.classList.add('bg-blue-700');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error with taskbar icon click for window:', error);
-                    showMessage(`Error interacting with ${appId} from taskbar`);
                 }
             });
         }
@@ -1023,6 +1027,7 @@
         try {
             hideAllContextMenus();
             hideContextMenu();
+            toggleStartMenu(); // Close start menu when an app is opened from it
 
             if (openWindows[appId]) {
                 // If app is already open, bring it to front or restore if minimized
@@ -1032,8 +1037,6 @@
                 }
                 zIndexCounter++;
                 existingWindow.style.zIndex = zIndexCounter;
-                const existingTaskbarIcon = document.getElementById(`taskbar-icon-${appId}`);
-                if (existingTaskbarIcon) existingTaskbarIcon.classList.add('bg-blue-700');
                 return;
             }
 
@@ -1287,6 +1290,16 @@
                             <div id="updates-content" class="p-4 flex-grow overflow-auto hidden">
                                 <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                                    <p class="font-bold text-lg mb-2">Version: 0.3.9</p>
+                                    <p class="text-blue-400 mb-2">Codename: Layout change & Start Menu change</p>
+                                    <p class="text-gray-300">
+                                        This update brings a significant overhaul to the desktop layout.
+                                        The taskbar has been removed, integrating its core functionalities into the Start Menu.
+                                        The desktop now features a left-aligned icon zone and a right-aligned "Shortcuts" area,
+                                        which prominently displays the time and date, now clickable to open the new "Date/Time" application.
+                                    </p>
+                                </div>
+                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: 0.3.8</p>
                                     <p class="text-blue-400 mb-2">Codename: Scrolling added</p>
                                     <p class="text-gray-300">
@@ -1314,7 +1327,7 @@
                                 <div class="bg-gray-800 p-4 rounded-lg">
                                     <p class="font-bold text-lg mb-2">Version: 0.3.0</p>
                                     <p class="text-blue-400 mb-2">Codename: Desktop columns & a Windows Update setting (alpha version)</p>
-                                    <p class="text-gray-300">
+                                    <p class="text-gray-300 text-sm">
                                         This update introduces a more organized desktop layout with columns and adds
                                         a conceptual Windows Update setting for future expansion.
                                     </p>
@@ -1417,6 +1430,18 @@
                         </div>
                     `;
                     break;
+                case 'date-time':
+                    iconHTML = '<i class="fa-solid fa-clock text-blue-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
+                            <h3 class="text-2xl font-bold mb-4">Date and Time</h3>
+                            <div class="text-6xl font-light font-['Source_Sans_3'] mb-2" id="app-time"></div>
+                            <div class="text-2xl font-light font-['Source_Sans_3'] mb-6" id="app-date"></div>
+                            <p class="text-gray-300">Current system date and time.</p>
+                            <p class="text-sm text-gray-500 mt-2">This is a conceptual date/time application.</p>
+                        </div>
+                    `;
+                    break;
                 case 'display-settings':
                     iconHTML = '<i class="fa-solid fa-display text-blue-400 text-lg"></i>';
                     contentHTML = `
@@ -1492,24 +1517,6 @@
             currentWindowsContainer.appendChild(windowElement); // Use the locally retrieved windowsContainer
             openWindows[appId] = windowElement;
 
-            // Add taskbar icon - using a dynamic image for 'about-windows'
-            const taskbarIcon = document.createElement('button');
-            taskbarIcon.id = `taskbar-icon-${appId}`;
-            taskbarIcon.className = `taskbar-app-icon flex items-center justify-center w-12 h-12 rounded-lg bg-blue-700 hover:bg-blue-600 focus:outline-none transition-colors`;
-            if (appId === 'about-windows') {
-                taskbarIcon.innerHTML = `<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-7 h-7">`;
-            } else {
-                taskbarIcon.innerHTML = iconHTML.replace('text-lg', 'text-xl'); // Use 'text-xl' for taskbar icons
-            }
-
-            const currentTaskbarApps = document.getElementById('taskbar-apps');
-            if (currentTaskbarApps) {
-                currentTaskbarApps.appendChild(taskbarIcon);
-            } else {
-                console.warn('Taskbar apps container not found, cannot add icon.');
-            }
-
-
             makeWindowDraggableAndResizable(windowElement, appId);
 
             // Remove opening animation class after it completes
@@ -1562,6 +1569,13 @@
                             showSettingsCategory(windowElement, item.dataset.categoryId);
                         });
                     });
+                }, 100);
+            }
+            // Initialize Date and Time app logic if it was just opened
+            if (appId === 'date-time') {
+                setTimeout(() => {
+                    updateDateTimeApp(windowElement); // Initial update
+                    setInterval(() => updateDateTimeApp(windowElement), 1000); // Update every second
                 }, 100);
             }
 
@@ -1795,6 +1809,18 @@
         }
     }
 
+    // --- Date and Time App Logic ---
+    function updateDateTimeApp(appWindowElement) {
+        const appTimeDisplay = appWindowElement.querySelector('#app-time');
+        const appDateDisplay = appWindowElement.querySelector('#app-date');
+        const now = new Date();
+        const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+        if (appTimeDisplay) appTimeDisplay.textContent = now.toLocaleTimeString([], timeOptions);
+        if (appDateDisplay) appDateDisplay.textContent = now.toLocaleDateString(undefined, dateOptions);
+    }
+
 
     // Initialize main desktop event listeners after the DOM is fully loaded
     function initializeDesktopListeners() {
@@ -1808,13 +1834,18 @@
         loginCard = document.querySelector('.login-card'); // Assign new variable
         welcomeMessage = document.getElementById('welcome-message'); // Assign new variable
 
-        // desktop, windowsContainer, startMenu, startButton, taskbarApps, desktopContextMenu
+        // desktop, windowsContainer, startMenu, startButton, desktopContextMenu
         // are now assigned after the DOM is ready.
         desktop = document.getElementById('desktop');
+        desktopIconsZone = document.getElementById('desktop-icons-zone'); // Assign new variable
+        shortcutsZone = document.getElementById('shortcuts-zone');    // Assign new variable
+        desktopTimeDisplay = document.getElementById('desktop-time'); // Assign new variable
+        desktopDateDisplay = document.getElementById('desktop-date'); // Assign new variable
+
         windowsContainer = document.getElementById('windows-container');
         startMenu = document.getElementById('start-menu');
         startButton = document.getElementById('start-button');
-        taskbarApps = document.getElementById('taskbar-apps'); // Global assignment
+        // taskbarApps removed
         desktopContextMenu = document.getElementById('desktop-context-menu');
 
         // --- Attach event listeners to desktop icons dynamically ---
@@ -1840,6 +1871,7 @@
         }
         if (startMenu && startButton) { // Ensure both exist for the start menu toggle
             document.addEventListener('click', function(event) {
+                // If click is outside start menu and not on the start button, hide it
                 if (!startMenu.contains(event.target) && !startButton.contains(event.target) && !startMenu.classList.contains('hidden')) {
                     startMenu.classList.add('hidden');
                 }
@@ -1883,6 +1915,7 @@
         }
 
         updateTimeAndDate(); // Initial call to update time/date after elements are assigned
+        setInterval(updateTimeAndDate, 1000); // Update time every second
     });
 </script>
 </body>
