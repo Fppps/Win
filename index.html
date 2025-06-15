@@ -1049,6 +1049,7 @@
 
             const windowElement = document.createElement('div');
             windowElement.id = `window-${appId}`;
+            // Changed overflow-hidden to overflow-auto for main window content
             windowElement.className = `window bg-gray-900 bg-opacity-95 backdrop-blur-lg border border-gray-700 text-gray-100 flex flex-col opening`;
             windowElement.style.zIndex = zIndexCounter;
             windowElement.style.width = '70%'; // Initial width
@@ -1360,7 +1361,7 @@
                 case 'image-viewer':
                     iconHTML = '<i class="fa-solid fa-image text-pink-400 text-lg"></i>';
                     contentHTML = `
-                        <div class="p-4 flex-grow overflow-hidden flex flex-col items-center justify-center">
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center">
                             <img src="https://placehold.co/400x300/F0F0F0/ADADAD?text=Image+Placeholder" alt="Placeholder Image" class="max-w-full max-h-full object-contain rounded-lg shadow-md mb-4">
                             <p class="text-gray-300">A conceptual image viewer. Click to load another image.</p>
                             <button class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Loading next image (conceptual)...');">
@@ -1483,7 +1484,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="window-content flex-grow overflow-hidden relative">
+                <div class="window-content flex-grow overflow-auto relative">
                     ${contentHTML}
                 </div>
             `;
@@ -1765,7 +1766,8 @@
             // Set initial night light state
             if (nightLightToggle.checked) {
                 desktopEnv.classList.add('night-light-active');
-            } else {
+            }
+            else {
                 desktopEnv.classList.remove('night-light-active');
                 // Reset filter if night light is off, respecting brightness
                 desktopEnv.style.filter = `brightness(${brightnessSlider.value || 100}%)`;
