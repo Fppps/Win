@@ -43,7 +43,7 @@
                     'Guest': {
                         'Documents': {
                             'Important.txt': 'This is an important document.',
-                            'Notes.md': '# My Notes\n\n- Task 1\n- Task 2'
+                            'Notes.md': '# My Notes\\n\\n- Task 1\\n- Task 2' // Use double backslash for newlines
                         },
                         'Desktop': {
                             'README.txt': 'Welcome to your desktop!'
@@ -196,8 +196,8 @@
     <style>
         /* Define CSS variables for themes. Default values are for dark mode. */
         :root {
-            --main-bg-color: #3E3572; /* Dark mode background color for the desktop underneath the image */
-            --desktop-image: url('Assets/Background/BackgroundV2.png'); /* Transparent image overlay */
+            --main-bg-color: #1a1a1a; /* Dark mode background for the entire body */
+            --desktop-image: url('Assets/Background/BackgroundV2.png'); /* Default wallpaper */
             --desktop-text-color: #f9fafb; /* Light text for dark background */
 
             /* Gradient for desktop overlay in dark mode */
@@ -205,17 +205,17 @@
             --desktop-gradient-end: rgba(0, 0, 0, 0.6);
 
             --window-bg: rgba(26, 26, 26, 0.95); /* Semi-transparent dark gray for window background */
-            --window-border: #4a4a4a; /* Dark gray border for windows */
+            --window-border: #3a3a3a; /* Darker gray border for windows */
             --window-text: #f9fafb; /* Light text for window content */
-            --window-shadow: 0 15px 50px rgba(0, 0, 0, 0.55); /* Enhanced shadow */
+            --window-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* Softer, more modern shadow */
 
             --header-bg: #1f2937; /* Darker gray for window headers */
-            --header-border: #4a4a4a; /* Darker gray border for headers */
+            --header-border: #3a3a3a; /* Darker gray border for headers */
             --header-button-hover: #374151; /* Darker gray for header button hover */
             --header-button-text: #9ca3af; /* Light gray for header button icons */
 
             --sidebar-bg: #2a2a2a; /* Dark gray for settings sidebar */
-            --sidebar-border: #4a4a4a; /* Dark gray border for sidebar */
+            --sidebar-border: #3a3a3a; /* Dark gray border for sidebar */
             --content-area-bg: #1a1a1a; /* Even darker gray for settings content area */
 
             --input-bg: #374151; /* Medium gray for inputs */
@@ -229,11 +229,16 @@
 
             --start-menu-item-hover: rgba(255, 255, 255, 0.1); /* Subtle hover for start menu items */
             --context-menu-item-hover: #3b82f6; /* Blue hover for context menu items */
+
+            /* New modern specific variables */
+            --border-radius-lg: 12px;
+            --border-radius-md: 8px;
+            --border-radius-sm: 6px;
         }
 
         /* Light mode overrides for CSS variables */
         body.light-mode {
-            --main-bg-color: #ADD8E6; /* Light Blue for desktop background */
+            --main-bg-color: #e0e7ff; /* Lighter background for the body */
             --desktop-text-color: #1a1a1a; /* Dark text for light background */
 
             /* Gradient for desktop overlay in light mode */
@@ -243,14 +248,14 @@
             --window-bg: rgba(255, 255, 255, 0.95); /* Semi-transparent white for window background */
             --window-border: #d1d5db; /* Light gray border for windows */
             --window-text: #1a1a1a; /* Dark text for window content */
-            --window-shadow: 0 15px 50px rgba(0, 0, 0, 0.25); /* Lighter shadow */
+            --window-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Lighter, subtle shadow */
 
-            --header-bg: #e0e7ff; /* Lighter blue-ish for window headers */
-            --header-border: #a7b7e5; /* Light blue border for headers */
-            --header-button-hover: #a7b7e5; /* Lighter blue for header button hover */
+            --header-bg: #eff2f9; /* Lighter blue-ish for window headers */
+            --header-border: #d1d5db; /* Light blue border for headers */
+            --header-button-hover: #e0e7ff; /* Lighter blue for header button hover */
             --header-button-text: #3b82f6; /* Blue for header button icons */
 
-            --sidebar-bg: #f3f4f6; /* Light gray for settings sidebar */
+            --sidebar-bg: #f5f7fa; /* Light gray for settings sidebar */
             --sidebar-border: #e5e7eb; /* Lighter gray border for sidebar */
             --content-area-bg: #ffffff; /* White for settings content area */
 
@@ -271,7 +276,7 @@
             font-family: 'Inter', sans-serif;
             overflow: hidden; /* Prevent body scroll */
             cursor: default;
-            background-color: var(--main-bg-color); /* Apply main background color */
+            background-color: var(--main-bg-color); /* Apply main background color based on theme */
             color: var(--desktop-text-color); /* Apply desktop text color */
             transition: background-color 0.5s ease-out, color 0.5s ease-out;
         }
@@ -296,26 +301,24 @@
         /* Window styles */
         .window {
             position: absolute;
-            /* No top/left/transform for initial centering; handled dynamically */
             min-width: 300px;
             min-height: 200px;
             box-shadow: var(--window-shadow); /* Use theme variable for shadow */
-            border-radius: 12px;
+            border-radius: var(--border-radius-lg); /* Modern rounded corners */
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            /* resize: both; /* Enable native resize, overridden by custom handle */
             background-color: var(--window-bg);
             border: 1px solid var(--window-border);
             color: var(--window-text);
-            transition: background-color 0.3s ease-out, border-color 0.3s ease-out, color 0.3s ease-out, box-shadow 0.3s ease-out;
+            transition: all 0.3s ease-out; /* Smoother transitions for all properties */
         }
 
         .window-header {
             cursor: grab;
             user-select: none;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
+            border-top-left-radius: var(--border-radius-lg);
+            border-top-right-radius: var(--border-radius-lg);
             background-color: var(--header-bg);
             border-bottom: 1px solid var(--header-border);
             transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
@@ -349,24 +352,26 @@
             display: none !important;
         }
 
-        /* Start Menu and Context Menu */
+        /* Start Menu and Custom Bottom Containers */
         .start-menu {
-            position: absolute;
-            bottom: 0;
-            left: 0.5rem;
+            position: fixed; /* Changed to fixed to stick to viewport bottom-left */
+            bottom: 6rem; /* Position above the new standalone start button */
+            left: 1rem;
             width: 900px;
             max-width: 95vw;
             height: 500px;
-            max-height: calc(100vh - 5rem);
+            max-height: calc(100vh - 7rem); /* Adjust max-height */
             overflow: hidden;
             transform-origin: bottom left;
             transition: transform 0.2s ease-out, opacity 0.2s ease-out, background-color 0.3s ease-out;
             display: flex;
             background-color: var(--window-bg);
-            border-radius: 12px;
+            border-radius: var(--border-radius-lg);
             padding: 1rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px); /* Slightly stronger blur */
+            box-shadow: var(--window-shadow); /* Use window shadow for consistency */
+            backdrop-filter: blur(20px); /* Stronger blur for modern frosted effect */
+            border: 1px solid var(--window-border); /* Add border for consistency */
+            z-index: 50; /* Ensure it's above other bottom elements but below modals */
         }
 
         .start-menu.hidden {
@@ -374,16 +379,21 @@
             opacity: 0;
             pointer-events: none;
         }
-        /* Added transition to start button for consistent look */
-        #start-button {
+
+        /* Standalone Start Button */
+        #standalone-start-button {
             transition: background-color 0.2s ease-in-out, transform 0.1s ease-out, box-shadow 0.2s ease-in-out;
+            position: fixed;
+            bottom: 1rem; /* Adjust position */
+            left: 1rem; /* Adjust position */
+            z-index: 40; /* Above desktop, below start menu */
         }
 
         .start-menu-item {
             display: flex;
             align-items: center;
             padding: 0.75rem 1rem;
-            border-radius: 8px;
+            border-radius: var(--border-radius-md);
             margin-bottom: 0.5rem;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
@@ -397,22 +407,24 @@
             position: absolute;
             z-index: 9999;
             transform-origin: top left;
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out, background-color 0.3s ease-out;
+            /* Added transition for smoother appearance/disappearance */
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out, background-color 0.3s ease-out;
             background-color: var(--window-bg);
-            border-radius: 8px;
+            border-radius: var(--border-radius-md);
             padding: 0.5rem;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(15px); /* Slightly stronger blur */
+            backdrop-filter: blur(20px); /* Stronger blur */
+            border: 1px solid var(--window-border); /* Add border for consistency */
         }
         .context-menu.hidden {
-            transform: scale(0.9);
+            transform: scale(0.9); /* Start slightly scaled down */
             opacity: 0;
             pointer-events: none;
         }
 
         .context-menu div {
             padding: 0.5rem 0.75rem;
-            border-radius: 6px;
+            border-radius: var(--border-radius-sm);
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
         .context-menu div:hover {
@@ -424,7 +436,7 @@
         @keyframes window-open {
             from {
                 opacity: 0;
-                transform: scale(0.9);
+                transform: scale(0.95);
             }
             to {
                 opacity: 1;
@@ -442,7 +454,7 @@
             }
             to {
                 opacity: 0;
-                transform: scale(0.9);
+                transform: scale(0.95);
             }
         }
         .window.closing {
@@ -451,21 +463,20 @@
 
         /* Desktop environment container */
         #desktop-env-container {
-            position: fixed;
+            position: fixed; /* Fix to viewport */
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: var(--main-bg-color);
+            background-color: var(--main-bg-color); /* Background for area under wallpaper */
             background-image: var(--desktop-image);
             background-repeat: no-repeat;
             background-position: center center;
             background-size: cover;
             transition: filter 0.5s ease-out, background-color 0.5s ease-out;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            filter: brightness(100%); /* Default filter */
+            z-index: 1; /* Below login screen initially */
+            display: flex; /* Keep flex for its internal structure */
+            flex-direction: column; /* Keep flex for its internal structure */
         }
         /* Gradient overlay for the desktop background */
         #desktop-env-container::before {
@@ -484,11 +495,9 @@
         #desktop-env-container.blurred {
             filter: blur(5px);
         }
+        /* When login is complete, desktop-env-container will become the primary view */
         #desktop-env-container.desktop-active {
-            z-index: 10;
-        }
-        #desktop-env-container.night-light-active {
-            /* This class will be added/removed, and refreshDesktopAppearance will apply the filter */
+            z-index: 10; /* Bring to front when active desktop */
         }
 
         /* Login screen styles */
@@ -498,12 +507,12 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: transparent;
+            background: transparent; /* Allow blurred desktop to show through */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10000;
+            z-index: 10000; /* Ensure it's on top */
             color: white;
             transition: opacity 0.5s ease-out;
         }
@@ -513,41 +522,42 @@
         }
 
         .login-card {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(20px);
-            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
+            backdrop-filter: blur(25px); /* Stronger blur for login */
+            border-radius: var(--border-radius-lg);
             padding: 40px;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); /* Stronger shadow for depth */
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7); /* More pronounced shadow */
             width: 90%;
-            max-width: 400px;
+            max-width: 450px; /* Slightly wider */
             display: flex;
             flex-direction: column;
             align-items: center;
             transform: translateY(20px);
             opacity: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle white border */
         }
         .login-card.show {
             transform: translateY(0);
             opacity: 1;
-            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+            transition: transform 0.6s ease-out, opacity 0.6s ease-out;
         }
 
         /* Profile picture on login screen */
         .profile-pic-login {
-            width: 96px;
-            height: 96px;
+            width: 100px; /* Slightly larger */
+            height: 100px;
             border-radius: 50%;
             background-color: #3b82f6;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
-            margin-bottom: 24px;
+            font-size: 52px; /* Larger icon */
+            margin-bottom: 28px; /* More space */
             color: white;
             overflow: hidden;
-            border: 3px solid #60a5fa;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border: 4px solid #60a5fa; /* Thicker border */
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); /* Enhanced glow */
         }
         .profile-pic-login img {
             width: 100%;
@@ -557,12 +567,12 @@
 
         /* Welcome Back message */
         .welcome-message {
-            font-size: 2.5rem;
+            font-size: 2.8rem; /* Slightly larger text */
             font-weight: 300;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.8rem; /* More space */
             opacity: 0;
             transform: translateY(-20px);
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            transition: opacity 0.6s ease-out 0.2s, transform 0.6s ease-out 0.2s; /* Delayed animation */
             color: #e0e7ff;
         }
         .welcome-message.show {
@@ -578,7 +588,7 @@
             background-color: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 1rem 1.5rem;
-            border-radius: 10px;
+            border-radius: var(--border-radius-md);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             z-index: 11000;
             opacity: 0;
@@ -656,7 +666,7 @@
 
         .settings-content-area {
             flex-grow: 1;
-            padding: 1rem;
+            padding: 1.5rem; /* More padding */
             overflow-y: auto;
             background-color: var(--content-area-bg);
             transition: background-color 0.3s ease-out;
@@ -666,7 +676,7 @@
             display: flex;
             align-items: center;
             padding: 0.75rem 1rem;
-            border-radius: 8px;
+            border-radius: var(--border-radius-md);
             margin-bottom: 0.5rem;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
@@ -679,6 +689,7 @@
         .settings-category-item.active {
             background-color: #005fba; /* Windows blue */
             color: white;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         .settings-category-item i {
@@ -691,18 +702,18 @@
         }
 
         /* Input field styling based on theme variables */
-        input[type="text"], input[type="password"], select {
+        input[type="text"], input[type="password"], select, textarea { /* Added textarea */
             background-color: var(--input-bg);
             color: var(--input-text);
-            padding: 0.75rem 1rem; /* Consistent padding */
-            border-radius: 8px; /* Slightly more rounded */
+            padding: 0.85rem 1.25rem; /* Increased padding */
+            border-radius: var(--border-radius-md); /* Slightly more rounded */
             border: 1px solid var(--window-border); /* Subtle border */
             transition: background-color 0.3s ease-out, color 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
         }
-        input[type="text"]::placeholder, input[type="password"]::placeholder {
+        input[type="text"]::placeholder, input[type="password"]::placeholder, textarea::placeholder { /* Added textarea */
             color: var(--placeholder-color);
         }
-        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+        input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus { /* Added textarea */
             outline: none;
             border-color: var(--focus-ring-color);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); /* Glow effect on focus */
@@ -745,21 +756,21 @@
             color: var(--window-text); /* Ensures text color adapts */
         }
         /* Adjust start button for light mode */
-        body.light-mode #start-button {
+        body.light-mode #standalone-start-button { /* Updated selector */
             background-color: rgba(255, 255, 255, 0.9);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-        body.light-mode #start-button:hover {
+        body.light-mode #standalone-start-button:hover { /* Updated selector */
             background-color: #60a5fa; /* Lighter blue hover for light mode */
         }
-        body.light-mode #start-button .fa-windows {
+        body.light-mode #standalone-start-button .fa-windows { /* Updated selector */
             color: #005fba; /* Darker blue for Windows icon in light mode */
         }
 
         /* Common button styles */
         button {
             transition: background-color 0.2s ease-in-out, transform 0.1s ease-out, box-shadow 0.2s ease-in-out;
-            border-radius: 8px; /* Default rounded corners for all buttons */
+            border-radius: var(--border-radius-md); /* Default rounded corners for all buttons */
             padding: 0.75rem 1.5rem; /* Default padding */
             font-weight: 600; /* Semi-bold text */
             cursor: pointer;
@@ -802,6 +813,37 @@
             color: white;
         }
 
+        /* Taskbar app icon styles (Removed but keeping for historical context if needed) */
+        .taskbar-app-icon {
+            transition: all 0.2s ease-in-out;
+            border: 1px solid transparent;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            /* display: none; will be removed with the taskbar */
+        }
+        .taskbar-app-icon:hover {
+            background-color: rgba(59, 130, 246, 0.8) !important; /* Slightly lighter blue on hover */
+            transform: translateY(-2px); /* Lift effect */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .taskbar-app-icon.active {
+            background-color: #2563eb; /* Darker blue for active */
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+        body.light-mode .taskbar-app-icon {
+            background-color: rgba(96, 165, 250, 0.8);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        body.light-mode .taskbar-app-icon:hover {
+            background-color: #3b82f6 !important;
+        }
+        body.light-mode .taskbar-app-icon.active {
+            background-color: #3b82f6;
+            border-color: #60a5fa;
+        }
+
+
         /* Calculator specific styles */
         #calc-display {
             background-color: var(--input-bg); /* Use theme variable */
@@ -811,7 +853,7 @@
             font-size: 2.5rem; /* Larger font */
             padding: 0.5rem;
             margin-bottom: 1rem;
-            border-radius: 8px;
+            border-radius: var(--border-radius-md);
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .calc-btn {
@@ -820,7 +862,7 @@
             border: none;
             font-size: 1.25rem;
             height: 50px;
-            border-radius: 10px;
+            border-radius: var(--border-radius-md);
             transition: background-color 0.2s, transform 0.1s;
         }
         .calc-btn:hover {
@@ -859,7 +901,7 @@
             background-color: var(--input-bg);
             color: var(--input-text);
             border: 1px solid var(--window-border);
-            border-radius: 8px;
+            border-radius: var(--border-radius-md);
             padding: 0.75rem 1rem;
         }
         #todo-input:focus {
@@ -877,7 +919,7 @@
         #todo-list-items li {
             background-color: var(--sidebar-bg); /* Use sidebar background for list items */
             border: 1px solid var(--sidebar-border);
-            border-radius: 8px;
+            border-radius: var(--border-radius-md);
             padding: 0.75rem 1rem;
             transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
         }
@@ -897,11 +939,12 @@
         /* Shortcuts Zone (Time/Date) */
         #shortcuts-zone {
             background-color: rgba(0, 0, 0, 0.5); /* Keep it dark semi-transparent */
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px); /* Stronger blur */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Slightly more visible border */
             color: white; /* Keep text white */
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4); /* Enhanced shadow */
             transition: background-color 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+            border-radius: var(--border-radius-lg); /* Rounded corners */
         }
         body.light-mode #shortcuts-zone {
             background-color: rgba(255, 255, 255, 0.5); /* Lighter semi-transparent */
@@ -912,6 +955,7 @@
         /* Desktop icons zone */
         #desktop-icons-zone .desktop-icon:hover {
             background-color: rgba(0, 0, 0, 0.2); /* Dark mode subtle hover */
+            border-radius: var(--border-radius-md); /* Apply rounded corners on hover */
         }
         body.light-mode #desktop-icons-zone .desktop-icon:hover {
             background-color: rgba(255, 255, 255, 0.2); /* Light mode subtle hover */
@@ -931,8 +975,8 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.75); /* Slightly darker overlay */
+            backdrop-filter: blur(15px); /* Stronger blur */
             z-index: 12000;
             display: flex;
             align-items: center;
@@ -949,10 +993,10 @@
             background-color: var(--window-bg);
             border: 1px solid var(--window-border);
             color: var(--window-text);
-            border-radius: 12px;
-            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            padding: 2.5rem; /* More padding */
             width: 90%;
-            max-width: 600px;
+            max-width: 650px; /* Slightly wider */
             box-shadow: var(--window-shadow);
             transform: translateY(20px);
             opacity: 0;
@@ -960,6 +1004,92 @@
         }
         #beta-intro-modal.show .beta-intro-card {
             transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* --- NEW/UPDATED STYLES FOR "BETTER" UI --- */
+
+        /* Enhanced Button Styles (excluding specific app buttons) */
+        button:not(.window-header button, .calc-btn, #add-todo-btn) { /* Exclude app-specific buttons and window controls */
+            background: linear-gradient(145deg, var(--general-button-bg), var(--general-button-hover));
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25); /* Slightly more pronounced shadow */
+            border: none;
+            position: relative;
+            overflow: hidden;
+            z-index: 1; /* Ensures pseudo-element is behind */
+            transition: all 0.2s ease-in-out; /* Global transition for better feel */
+        }
+
+        button:not(.window-header button, .calc-btn, #add-todo-btn)::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.25); /* Slightly more opaque ripple effect */
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out; /* Slower ripple */
+            opacity: 0;
+            z-index: -1;
+        }
+
+        button:not(.window-header button, .calc-btn, #add-todo-btn):hover::before {
+            width: 250%; /* Expands more to cover button */
+            height: 250%;
+            opacity: 1;
+        }
+
+        button:not(.window-header button, .calc-btn, #add-todo-btn):active {
+            transform: translateY(0px); /* Remove slight lift on active */
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); /* Pressed effect */
+        }
+
+        /* Desktop Icon active state */
+        .desktop-icon.active {
+            background-color: rgba(59, 130, 246, 0.3); /* A light blue highlight */
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); /* Stronger glow */
+            border-radius: var(--border-radius-md); /* Consistent rounded corners */
+        }
+        .desktop-icon:active {
+            transform: scale(0.96); /* Slightly more pronounced press effect */
+        }
+
+        /* Light mode specific button overrides for general buttons */
+        body.light-mode button:not(.window-header button, .calc-btn, #add-todo-btn) {
+            background: linear-gradient(145deg, var(--general-button-hover), var(--general-button-bg)); /* Invert gradient for light mode */
+            color: var(--general-button-text);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Lighter shadow in light mode */
+        }
+        body.light-mode button:not(.window-header button, .calc-btn, #add-todo-btn):hover {
+            background: linear-gradient(145deg, var(--general-button-bg), var(--general-button-hover)); /* Restore hover gradient */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* More pronounced shadow on hover */
+        }
+
+        /* Window Header Button Hover for Light Mode */
+        body.light-mode .window-header button:hover {
+            background-color: var(--header-button-hover);
+            color: var(--header-button-text);
+        }
+        body.light-mode .window-header .close-btn:hover {
+            background-color: #dc2626; /* Red for close button */
+            color: white;
+        }
+
+        /* Snapping Preview styles */
+        .snap-preview {
+            position: absolute;
+            background-color: rgba(59, 130, 246, 0.25); /* Slightly more opaque blue */
+            border: 2px dashed rgba(59, 130, 246, 0.7); /* Stronger dashed border */
+            border-radius: var(--border-radius-lg); /* Consistent rounded corners */
+            z-index: 9999; /* Above windows, below login/modals */
+            pointer-events: none; /* Crucial: allow clicks to pass through */
+            transition: opacity 0.1s ease-out;
+            opacity: 0; /* Hidden by default */
+        }
+        .snap-preview.show {
             opacity: 1;
         }
 
@@ -981,7 +1111,7 @@
             </div>
             <h2 class="welcome-message" id="welcome-message">Welcome Back, User Name</h2>
             <div class="mb-6 w-full">
-                <input type="password" id="password-input" class="w-full text-center" placeholder="Enter password" onkeyup="handleLoginEnter(event)">
+                <input type="password" id="password-input" class="w-full text-center" placeholder="Enter password">
                 <p id="login-error-message" class="text-red-400 text-sm mt-2 hidden">Incorrect password.</p>
             </div>
             <button onclick="attemptLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg">
@@ -1023,7 +1153,7 @@
 
     <!-- Desktop Environment (initially blurred, then unblurred and active) -->
     <div id="desktop-env-container" class="w-full h-full flex flex-col">
-        <!-- Actual Desktop Area (content above taskbar) -->
+        <!-- Actual Desktop Area (content above bottom controls) -->
         <div id="desktop" class="flex-grow flex p-4 relative overflow-hidden">
             <!-- Left Zone: Desktop Icons -->
             <div id="desktop-icons-zone" class="w-1/4 min-w-[150px] max-w-[250px] overflow-y-auto pr-4">
@@ -1076,6 +1206,21 @@
                         <i class="fa-solid fa-display text-blue-400 text-4xl"></i>
                         <span class="text-sm mt-1 text-center">Display Settings</span>
                     </div>
+                    <!-- New Recycle Bin App Icon -->
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Recycle Bin" data-app-id="recycle-bin">
+                        <i class="fa-solid fa-trash-can text-gray-500 text-4xl"></i>
+                        <span class="text-sm mt-1">Recycle Bin</span>
+                    </div>
+                    <!-- New Code Editor App Icon -->
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Code Editor" data-app-id="code-editor">
+                        <i class="fa-solid fa-code text-orange-400 text-4xl"></i>
+                        <span class="text-sm mt-1">Code Editor</span>
+                    </div>
+                    <!-- New Windows Update App Icon -->
+                    <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Windows Update" data-app-id="windows-update">
+                        <i class="fa-solid fa-cloud-arrow-down text-blue-500 text-4xl"></i>
+                        <span class="text-sm mt-1 text-center">Windows Update</span>
+                    </div>
                 </div>
             </div>
 
@@ -1116,23 +1261,31 @@
                     <li class="start-menu-item" onclick="openApp('Settings', 'settings'); toggleStartMenu()">
                         <i class="fa-solid fa-gear text-gray-400 text-xl mr-2"></i> Settings
                     </li>
+                    <li class="start-menu-item" onclick="openApp('Code Editor', 'code-editor'); toggleStartMenu()">
+                        <i class="fa-solid fa-code text-orange-400 text-xl mr-2"></i> Code Editor
+                    </li>
+                    <li class="start-menu-item" onclick="openApp('Windows Update', 'windows-update'); toggleStartMenu()">
+                        <i class="fa-solid fa-cloud-arrow-down text-blue-500 text-xl mr-2"></i> Windows Update
+                    </li>
                 </ul>
             </div>
 
             <!-- Middle Panel: Updates -->
             <div class="w-1/3 border-r border-gray-700 px-4 overflow-y-auto">
                 <h2 class="text-lg font-semibold mb-4 text-blue-400">Windows 13 Updates</h2>
-                <!-- NEW UPDATE ENTRY START -->
+                <!-- UPDATED V0.4.0 (Official) ENTRY START -->
                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: V0.4.0 (BETA)</p>
-                    <p class="text-blue-400 mb-2">Codename: New functions and alignment fixes</p>
+                    <p class="font-bold text-lg mb-2">Version: V0.4.0 (Official)</p>
+                    <p class="text-blue-400 mb-2">Codename: Stability & Feature Parity</p>
                     <p class="text-gray-300 text-sm">
-                        This beta release brings significant improvements including persistent user settings via local storage,
-                        enhanced login and account creation, a more interactive File Explorer, functional Terminal commands,
-                        and refined window resizing behavior for a smoother user experience.
+                        Thank you for your patience! This official release was delayed to ensure critical bug fixes,
+                        performance optimizations, and feature completeness for a seamless user experience.
+                        We've focused on enhancing underlying stability, refining UI animations, and implementing
+                        robust error handling. This version brings all the promised features of the beta
+                        into a production-ready state, ensuring reliability and a polished feel.
                     </p>
                 </div>
-                <!-- NEW UPDATE ENTRY END -->
+                <!-- UPDATED V0.4.0 (Official) ENTRY END -->
                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                     <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
                     <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
@@ -1206,7 +1359,10 @@
                     <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); toggleStartMenu()">
                         <i class="fa-solid fa-volume-high text-blue-400 text-2xl"></i> <span class="text-xs mt-1">Volume</span>
                     </div>
-                    <!-- Add more device settings icons as needed -->
+                    <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="showMessage('Power Options!'); toggleStartMenu()">
+                        <i class="fa-solid fa-power-off text-red-400 text-2xl"></i>
+                        <span class="text-xs mt-1">Power</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1218,12 +1374,20 @@
             <div class="py-1 px-3 rounded-md cursor-pointer" onclick="showMessage('New folder created!'); hideContextMenu()">New Folder</div>
         </div>
 
-    </div>
+        <!-- NEW: Custom Internet & Volume Container at bottom-middle -->
+        <div id="internet-volume-container" class="flex items-center space-x-4 bg-gray-800 bg-opacity-90 backdrop-blur-md rounded-t-lg px-6 py-3 fixed bottom-0 left-1/2 -translate-x-1/2 z-40 shadow-xl transition-all duration-300">
+            <i class="fa-solid fa-wifi text-white text-xl cursor-pointer hover:text-blue-400" onclick="showMessage('Wi-Fi settings opened (conceptual)!')"></i>
+            <i class="fa-solid fa-volume-high text-white text-xl cursor-pointer hover:text-blue-400" onclick="openApp('Display Settings', 'display-settings')"></i>
+            <span id="system-time-bottom" class="text-white text-sm"></span>
+            <span id="system-date-bottom" class="text-white text-sm"></span>
+        </div>
 
-    <!-- Start Button at bottom-left corner -->
-    <button id="start-button" class="absolute bottom-4 left-4 flex items-center justify-center w-12 h-12 rounded-full bg-gray-800 bg-opacity-90 backdrop-blur-md hover:bg-blue-600 focus:outline-none z-40" onclick="toggleStartMenu()">
-        <i class="fa-brands fa-windows text-blue-400 text-2xl"></i>
-    </button>
+        <!-- NEW: Standalone Start Button at bottom-left -->
+        <button id="standalone-start-button" class="fixed bottom-4 left-4 flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 bg-opacity-90 backdrop-blur-md hover:bg-blue-600 focus:outline-none transition-colors z-40 shadow-xl" onclick="toggleStartMenu()">
+            <i class="fa-brands fa-windows text-blue-400 text-3xl"></i>
+        </button>
+
+    </div>
 
     <!-- Custom Message Box -->
     <div id="message-box" class="hidden"></div>
@@ -1269,13 +1433,23 @@
 
     let windowsContainer;
     let startMenu;
-    let startButton;
+    let standaloneStartButton; // Changed from startButton
     let desktopContextMenu;
+    // let taskbarApps; // Removed taskbarApps as taskbar is gone
 
-    let betaIntroModal; // New for beta intro modal
+    let internetVolumeContainer; // New reference
+    let systemTimeBottom; // New reference
+    let systemDateBottom; // New reference
+
 
     let zIndexCounter = 1000;
     let openWindows = {}; // Stores references to open window elements by app id
+
+    // Global snap preview element (created once, reused)
+    let snapPreviewElement = null;
+    // Global variable to keep track of the currently active desktop icon
+    let activeDesktopIcon = null;
+
 
     // --- Tone.js Synth for Boot Sound ---
     const bootSynth = new Tone.Synth().toDestination();
@@ -1337,6 +1511,23 @@
         saveUserPreferences(); // Persist that the intro has been shown
     }
 
+    /**
+     * Sets the active desktop icon, removing the active state from any previously active icon.
+     * @param {HTMLElement|null} iconElement - The icon element to set as active, or null to clear.
+     */
+    function setActiveDesktopIcon(iconElement) {
+        // Remove active class from previously active icon
+        if (activeDesktopIcon && activeDesktopIcon !== iconElement) {
+            activeDesktopIcon.classList.remove('active');
+        }
+        // Add active class to the new icon
+        if (iconElement) {
+            iconElement.classList.add('active');
+        }
+        activeDesktopIcon = iconElement;
+    }
+
+
     // --- Core OS Functions ---
 
     // Function to update time and date for both login screen and desktop shortcuts
@@ -1355,6 +1546,12 @@
                 desktopTimeDisplay.textContent = now.toLocaleTimeString([], timeOptions);
                 desktopDateDisplay.textContent = now.toLocaleDateString(undefined, dateOptions);
             }
+            // Update time and date in the new bottom-middle container
+            if (systemTimeBottom && systemDateBottom) {
+                systemTimeBottom.textContent = now.toLocaleTimeString([], timeOptions);
+                systemDateBottom.textContent = now.toLocaleDateString();
+            }
+
         } catch (error) {
             console.error('Error in updateTimeAndDate:', error);
         }
@@ -1422,7 +1619,7 @@
         }
     }
 
-    // Handle Enter key press on password input for login
+    // Handle Enter key press on password input for login - ATTACHED PROGRAMMATICALLY
     function handleLoginEnter(event) {
         if (event.key === 'Enter') {
             attemptLogin();
@@ -1521,8 +1718,18 @@
     function hideAllContextMenus() {
         try {
             const desktopContextMenuElement = document.getElementById('desktop-context-menu');
-            if (desktopContextMenuElement) {
-                desktopContextMenuElement.classList.add('hidden');
+            if (desktopContextMenuElement && !desktopContextMenuElement.classList.contains('hidden')) {
+                // Animate out
+                anime({
+                    targets: desktopContextMenuElement,
+                    scale: [1, 0.9],
+                    opacity: [1, 0],
+                    duration: 100,
+                    easing: 'easeInQuad',
+                    complete: function() {
+                        desktopContextMenuElement.classList.add('hidden');
+                    }
+                });
             }
         } catch (error) {
             console.error('Error hiding all context menus:', error);
@@ -1540,6 +1747,19 @@
                 desktopContextMenuElement.style.left = `${event.clientX}px`;
                 desktopContextMenuElement.style.top = `${event.clientY}px`;
                 desktopContextMenuElement.classList.remove('hidden');
+                // Animate in
+                anime({
+                    targets: desktopContextMenuElement,
+                    scale: [0.9, 1],
+                    opacity: [0, 1],
+                    duration: 100,
+                    easing: 'easeOutQuad'
+                });
+                // Prevent clicks on the context menu from propagating to the desktop
+                // and causing it to immediately close.
+                desktopContextMenuElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                }, { once: true }); // Use once: true to remove listener after first click
             } else {
                 console.warn('Desktop context menu element not found.');
             }
@@ -1553,14 +1773,38 @@
     function hideContextMenu() {
         try {
             const desktopContextMenuElement = document.getElementById('desktop-context-menu');
-            if (desktopContextMenuElement) {
-                desktopContextMenuElement.classList.add('hidden');
+            if (desktopContextMenuElement && !desktopContextMenuElement.classList.contains('hidden')) {
+                // Animate out and then hide
+                anime({
+                    targets: desktopContextMenuElement,
+                    scale: [1, 0.9],
+                    opacity: [1, 0],
+                    duration: 100,
+                    easing: 'easeInQuad',
+                    complete: function() {
+                        desktopContextMenuElement.classList.add('hidden');
+                    }
+                });
             }
         } catch (error) {
             console.error('Error hiding context menu:', error);
         }
     }
 
+    /**
+     * Initializes the global snap preview element.
+     */
+    function initializeSnapPreview() {
+        if (!snapPreviewElement) {
+            snapPreviewElement = document.createElement('div');
+            snapPreviewElement.className = 'snap-preview hidden'; // Hidden by default
+            if (windowsContainer) {
+                windowsContainer.appendChild(snapPreviewElement); // Add to the windows container
+            } else {
+                console.error('Windows container not found, cannot initialize snap preview.');
+            }
+        }
+    }
 
     // Draggable and Resizable Window Logic
     function makeWindowDraggableAndResizable(windowElement, appId) {
@@ -1569,92 +1813,160 @@
         let isResizing = false;
         let initialMouseX, initialMouseY;
         let initialWindowX, initialWindowY;
-        let initialWidth, initialHeight; // Declared here
+        let initialWidth, initialHeight;
+
+        let snappedState = null; // null, 'left', 'right', 'max'
 
         // Z-index management: bring clicked window to front
         windowElement.addEventListener('mousedown', () => {
             zIndexCounter++;
             windowElement.style.zIndex = zIndexCounter;
+            if (snapPreviewElement) snapPreviewElement.classList.remove('show'); // Hide preview if interaction starts on a window
+
+            // No taskbar icons to activate/deactivate anymore
         });
 
         // Dragging
         if (header) {
             header.addEventListener('mousedown', (e) => {
-                try {
-                    if (windowElement.classList.contains('maximized')) return; // Cannot drag when maximized
-                    isDragging = true;
-                    initialMouseX = e.clientX;
-                    initialMouseY = e.clientY;
-
-                    // Convert current position (which might be CSS transform based) to pixel values
+                // If maximized, restore first before dragging
+                if (windowElement.classList.contains('maximized')) {
+                    const maximizeRestoreBtn = windowElement.querySelector('.maximize-restore-btn');
+                    if (maximizeRestoreBtn) {
+                        maximizeRestoreBtn.click(); // Simulate click to restore
+                        // After restoring, re-initialize drag state based on new position
+                        const rect = windowElement.getBoundingClientRect();
+                        initialWindowX = rect.left;
+                        initialWindowY = rect.top;
+                    } else {
+                        return; // Should not happen if a maximize/restore button exists
+                    }
+                } else {
                     const rect = windowElement.getBoundingClientRect();
                     windowElement.style.left = `${rect.left}px`;
                     windowElement.style.top = `${rect.top}px`;
                     windowElement.style.transform = 'none'; // Remove centering transform
                     windowElement.style.right = 'auto'; // Clear right/bottom for direct left/top control
                     windowElement.style.bottom = 'auto';
-
                     initialWindowX = rect.left;
                     initialWindowY = rect.top;
-
-                    header.style.cursor = 'grabbing';
-                } catch (error) {
-                    console.error('Error on header mousedown:', error);
                 }
+
+                isDragging = true;
+                initialMouseX = e.clientX;
+                initialMouseY = e.clientY;
+                header.style.cursor = 'grabbing';
+                snappedState = null; // Clear snapped state when dragging starts
             });
         }
 
         // Event listener for mousemove on the whole document for dragging/resizing
         document.addEventListener('mousemove', (e) => {
-            try {
-                if (isDragging) {
-                    e.preventDefault();
-                    let newX = initialWindowX + (e.clientX - initialMouseX);
-                    let newY = initialWindowY + (e.clientY - initialMouseY);
+            if (isDragging) {
+                e.preventDefault();
+                let newX = initialWindowX + (e.clientX - initialMouseX);
+                let newY = initialWindowY + (e.clientY - initialMouseY);
 
-                    // Constrain window to desktop bounds
-                    const desktopElement = document.getElementById('desktop');
-                    if (!desktopElement) {
-                        console.error('Desktop element not found for drag/resize bounds.');
-                        return;
-                    }
-                    const desktopRect = desktopElement.getBoundingClientRect();
-                    const windowRect = windowElement.getBoundingClientRect();
+                // Snapping Logic
+                const desktopRect = desktop.getBoundingClientRect();
+                const snapThreshold = 15; // pixels from edge to trigger snap
 
+                let previewType = null;
+                let previewWidth, previewHeight, previewLeft, previewTop;
+
+                // Check for top edge (maximize)
+                if (e.clientY < desktopRect.top + snapThreshold) {
+                    previewType = 'max';
+                    previewWidth = desktopRect.width;
+                    previewHeight = desktopRect.height; // Full desktop height
+                    previewLeft = desktopRect.left;
+                    previewTop = desktopRect.top;
+                }
+                // Check for left edge (snap left)
+                else if (e.clientX < desktopRect.left + snapThreshold) {
+                    previewType = 'left';
+                    previewWidth = desktopRect.width / 2;
+                    previewHeight = desktopRect.height;
+                    previewLeft = desktopRect.left;
+                    previewTop = desktopRect.top;
+                }
+                // Check for right edge (snap right)
+                else if (e.clientX > desktopRect.right - snapThreshold) {
+                    previewType = 'right';
+                    previewWidth = desktopRect.width / 2;
+                    previewHeight = desktopRect.height;
+                    previewLeft = desktopRect.left + desktopRect.width / 2;
+                    previewTop = desktopRect.top;
+                } else {
+                    // No snap zone
+                    previewType = null;
+                }
+
+                if (previewType && snapPreviewElement) {
+                    snapPreviewElement.style.width = `${previewWidth}px`;
+                    snapPreviewElement.style.height = `${previewHeight}px`;
+                    snapPreviewElement.style.left = `${previewLeft}px`;
+                    snapPreviewElement.style.top = `${previewTop}px`;
+                    snapPreviewElement.classList.add('show');
+                } else if (snapPreviewElement) {
+                    snapPreviewElement.classList.remove('show');
+                }
+
+                // Update actual window position only if no snap preview is active
+                if (!previewType) {
+                    const windowRect = windowElement.getBoundingClientRect(); // Get updated rect
                     newX = Math.max(desktopRect.left, Math.min(newX, desktopRect.right - windowRect.width));
                     newY = Math.max(desktopRect.top, Math.min(newY, desktopRect.bottom - windowRect.height));
 
                     windowElement.style.left = `${newX}px`;
                     windowElement.style.top = `${newY}px`;
-                } else if (isResizing) {
-                    e.preventDefault();
-                    let newWidth = initialWidth + (e.clientX - initialMouseX);
-                    let newHeight = initialHeight + (e.clientY - initialMouseY);
-
-                    // Enforce minimum size (e.g., 200px or 300px)
-                    windowElement.style.width = `${Math.max(newWidth, 300)}px`;
-                    windowElement.style.height = `${Math.max(newHeight, 200)}px`;
                 }
-            } catch (error) {
-                console.error('Error during window drag/resize:', error);
-                isDragging = false; // Stop operation on error
-                isResizing = false;
-                document.body.style.cursor = 'default';
+
+            } else if (isResizing) {
+                e.preventDefault();
+                let newWidth = initialWidth + (e.clientX - initialMouseX);
+                let newHeight = initialHeight + (e.clientY - initialMouseY);
+
+                windowElement.style.width = `${Math.max(newWidth, 300)}px`;
+                windowElement.style.height = `${Math.max(newHeight, 200)}px`;
             }
         });
 
         // Event listener for mouseup on the whole document to stop dragging/resizing
-        document.addEventListener('mouseup', () => {
-            try {
+        document.addEventListener('mouseup', (e) => {
+            if (isDragging) {
                 isDragging = false;
-                isResizing = false;
-                if (header) header.style.cursor = 'grab'; // Restore cursor if header exists
-                document.body.style.cursor = 'default';
-            } catch (error) {
-                console.error('Error on mouseup:', error);
-            }
-        });
+                header.style.cursor = 'grab'; // Restore cursor
 
+                if (snapPreviewElement && snapPreviewElement.classList.contains('show')) {
+                    // Apply snap
+                    const previewRect = snapPreviewElement.getBoundingClientRect();
+                    windowElement.style.width = `${previewRect.width}px`;
+                    windowElement.style.height = `${previewRect.height}px`;
+                    windowElement.style.left = `${previewRect.left}px`;
+                    windowElement.style.top = `${previewRect.top}px`;
+                    windowElement.style.transform = 'none'; // Ensure no conflicting transforms
+                    windowElement.style.right = 'auto';
+                    windowElement.style.bottom = 'auto';
+
+                    // If maximizing, update the icon on the window controls
+                    const maximizeRestoreBtn = windowElement.querySelector('.maximize-restore-btn');
+                    if (maximizeRestoreBtn) {
+                         maximizeRestoreBtn.innerHTML = '<i class="fa-solid fa-compress"></i>'; // Restore icon
+                         windowElement.classList.add('maximized'); // Add maximized class
+                    }
+                } else {
+                    // If not snapped, ensure maximized state is removed if it was a false alarm.
+                    // This is important if a user moves a maximized window and doesn't snap it.
+                     windowElement.classList.remove('maximized');
+                     const maximizeRestoreBtn = windowElement.querySelector('.maximize-restore-btn');
+                     if (maximizeRestoreBtn) maximizeRestoreBtn.innerHTML = '<i class="fa-regular fa-square"></i>';
+                }
+                if (snapPreviewElement) snapPreviewElement.classList.remove('show');
+            }
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        });
 
         // Resizing (custom handle)
         const resizeHandle = document.createElement('div');
@@ -1668,7 +1980,6 @@
                     isResizing = true;
                     initialMouseX = e.clientX;
                     initialMouseY = e.clientY;
-                    // Removed 'let' here as initialWidth and initialHeight are already declared
                     initialWidth = windowElement.offsetWidth;
                     initialHeight = windowElement.offsetHeight;
                     e.stopPropagation(); // Prevent dragging from starting
@@ -1688,6 +1999,7 @@
             minimizeBtn.addEventListener('click', () => {
                 try {
                     windowElement.classList.add('minimized');
+                    // No taskbar icon to remove 'active' class from directly anymore
                 } catch (error) {
                     console.error('Error minimizing window:', error);
                     showMessage(`Error minimizing ${appId}`);
@@ -1724,6 +2036,13 @@
 
                         windowElement.classList.add('maximized');
                         maximizeRestoreBtn.innerHTML = '<i class="fa-solid fa-compress"></i>'; // Restore icon
+                        // Ensure window takes full desktop space
+                        const desktopRect = desktop.getBoundingClientRect();
+                        windowElement.style.left = `${desktopRect.left}px`;
+                        windowElement.style.top = `${desktopRect.top}px`;
+                        windowElement.style.width = `${desktopRect.width}px`;
+                        windowElement.style.height = `${desktopRect.height}px`;
+                        windowElement.style.transform = 'none';
                     }
                 } catch (error) {
                     console.error('Error maximizing/restoring window:', error);
@@ -1741,8 +2060,13 @@
 
                     // Listen for animation end before removing
                     windowElement.addEventListener('animationend', () => {
+                        // If the closed app's icon was active, clear active state
+                        if (activeDesktopIcon && activeDesktopIcon.dataset.appId === appId) {
+                            setActiveDesktopIcon(null);
+                        }
                         windowElement.remove();
                         delete openWindows[appId];
+                        // No taskbar icon to remove anymore
                     }, { once: true }); // Ensure listener runs only once
                 } catch (error) {
                     console.error('Error closing window:', error);
@@ -1762,6 +2086,139 @@
         windowElement.style.width = `${initialWidthCalculated}px`;
         windowElement.style.height = `${initialHeightCalculated}px`;
     }
+
+    /**
+     * Helper function to create a new window element with basic controls.
+     * @param {string} appTitle - The title of the app.
+     * @param {string} appId - Unique ID for the app.
+     * @param {string} iconHTML - HTML string for the app icon (e.g., '<i class="..."></i>').
+     * @returns {HTMLElement} The newly created window element.
+     */
+    function createNewWindow(appTitle, appId, iconHTML) {
+        const windowElement = document.createElement('div');
+        windowElement.id = `window-${appId}`;
+        windowElement.className = `window flex flex-col opening`;
+        windowElement.style.zIndex = zIndexCounter++; // Set z-index and increment
+        windowElement.style.pointerEvents = 'auto'; // Re-enable pointer events for the new window
+
+        windowElement.innerHTML = `
+            <div class="window-header flex items-center justify-between p-3">
+                <div class="flex items-center gap-2">
+                    ${iconHTML}
+                    <span class="text-md font-semibold">${appTitle}</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="minimize-btn">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <button class="maximize-restore-btn">
+                        <i class="fa-regular fa-square"></i>
+                    </button>
+                    <button class="close-btn">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="window-content flex-grow overflow-auto relative">
+                <!-- App specific content will be injected here -->
+            </div>
+        `;
+
+        windowsContainer.appendChild(windowElement);
+        openWindows[appId] = windowElement;
+
+        // No taskbar icons to add anymore, as per user request.
+
+        // Ensure input is focused when window opens - relevant for terminal/editor
+        windowElement.addEventListener('animationend', () => {
+            windowElement.classList.remove('opening');
+            // Auto-focus on relevant elements if they exist
+            const inputElement = windowElement.querySelector('input[type="text"], textarea');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }, { once: true });
+
+
+        makeWindowDraggableAndResizable(windowElement, appId); // Apply drag/resize after creation
+
+        return windowElement;
+    }
+
+    /**
+     * Helper function to restore a minimized window and bring it to front.
+     * @param {HTMLElement} windowElement - The window element to restore.
+     */
+    function restoreWindow(windowElement) {
+        windowElement.classList.remove('minimized');
+        zIndexCounter++;
+        windowElement.style.zIndex = zIndexCounter;
+        // No taskbar icon to activate anymore.
+    }
+
+
+    // Function to handle tab switching specifically for the "About Windows 13" app
+    function showSettingsCategory(parentWindow, categoryId) {
+        // Hide all content areas within the settings app
+        parentWindow.querySelectorAll('.settings-content-area > div').forEach(div => {
+            div.classList.add('hidden');
+        });
+        // Deactivate all sidebar items
+        parentWindow.querySelectorAll('.settings-category-item').forEach(item => {
+            item.classList.remove('active', 'bg-blue-600', 'hover:bg-blue-700', 'text-white');
+            item.classList.add('bg-transparent', 'hover:bg-gray-700');
+        });
+
+        // Show the selected content area
+        const targetContent = parentWindow.querySelector(`#${categoryId}-content`);
+        if (targetContent) {
+            targetContent.classList.remove('hidden');
+        }
+
+        // Activate the clicked sidebar item
+        const clickedItem = parentWindow.querySelector(`.settings-category-item[data-category-id="${categoryId}"]`);
+        if (clickedItem) {
+            clickedItem.classList.add('active', 'bg-blue-600', 'text-white');
+            clickedItem.classList.remove('bg-transparent', 'hover:bg-gray-700');
+        }
+
+         // Special handling for personalization to ensure wallpaper preview and inputs are updated
+        if (categoryId === 'personalization') {
+            const currentWallpaperPreview = parentWindow.querySelector('#current-wallpaper-preview');
+            if (currentWallpaperPreview) {
+                currentWallpaperPreview.style.backgroundImage = `url('${window.userPreferences.wallpaperUrl}')`;
+            }
+             // Ensure existing wallpaper is visually selected
+            document.querySelectorAll('#personalization-content img').forEach(img => {
+                img.classList.remove('border-blue-500');
+                img.classList.add('border-transparent');
+                if (img.src.includes(encodeURIComponent(window.userPreferences.wallpaperUrl))) {
+                    img.classList.remove('border-transparent');
+                    img.classList.add('border-blue-500');
+                }
+            });
+            const wallpaperUrlInput = parentWindow.querySelector('#wallpaper-url-input');
+            if (wallpaperUrlInput) {
+                wallpaperUrlInput.value = ''; // Clear custom URL field on category switch
+            }
+        }
+        // Special handling for accounts to update display
+        if (categoryId === 'accounts') {
+            updateProfileDisplay(); // Call this to refresh username/password fields
+        }
+
+        // Special handling for Display Settings category to initialize its controls
+        if (categoryId === 'system') {
+            const displaySettingsButton = parentWindow.querySelector('#system-content button');
+            if (displaySettingsButton) {
+                displaySettingsButton.onclick = () => {
+                    openApp('Display Settings', 'display-settings');
+                    parentWindow.querySelector('.close-btn').click(); // Close settings when opening display settings
+                };
+            }
+        }
+    }
+
 
     // Function to handle tab switching specifically for the "About Windows 13" app
     function showAboutTabForApp(parentWindow, tabName) {
@@ -1795,103 +2252,58 @@
         }
     }
 
-    // Function to display content in the settings app based on selected category
-    function showSettingsCategory(settingsWindowElement, categoryId) {
-        // Hide all content divs
-        settingsWindowElement.querySelectorAll('.settings-content-area > div').forEach(div => {
-            div.classList.add('hidden');
-        });
-        // Remove active class from all sidebar items
-        settingsWindowElement.querySelectorAll('.settings-category-item').forEach(item => {
-            item.classList.remove('active');
-        });
-
-        // Show the selected content div
-        const selectedContent = settingsWindowElement.querySelector(`#${categoryId}-content`);
-        if (selectedContent) {
-            selectedContent.classList.remove('hidden');
-        }
-
-        // Add active class to the selected sidebar item
-        const selectedSidebarItem = settingsWindowElement.querySelector(`[data-category-id="${categoryId}"]`);
-        if (selectedSidebarItem) {
-            selectedSidebarItem.classList.add('active');
-        }
-
-        // Special handling for "Accounts" and "Personalization" to load/update data
-        if (categoryId === 'accounts') {
-            const accountsUsernameInput = settingsWindowElement.querySelector('#accounts-username-input');
-            const accountsPasswordInput = settingsWindowElement.querySelector('#accounts-password-input');
-            if (accountsUsernameInput) accountsUsernameInput.value = window.userPreferences.username;
-            if (accountsPasswordInput) accountsPasswordInput.value = window.userPreferences.password;
-        } else if (categoryId === 'personalization') {
-            const currentWallpaperPreview = settingsWindowElement.querySelector('#current-wallpaper-preview');
-            const desktopEnvContainer = document.getElementById('desktop-env-container'); // Get desktop container
-            if (currentWallpaperPreview && desktopEnvContainer) {
-                currentWallpaperPreview.style.backgroundImage = desktopEnvContainer.style.getPropertyValue('--desktop-image');
-            }
-            const wallpaperUrlInput = settingsWindowElement.querySelector('#wallpaper-url-input');
-            if (wallpaperUrlInput) {
-                const currentWallpaper = window.userPreferences.wallpaperUrl;
-                if (!currentWallpaper.startsWith('Assets/Background/')) {
-                    wallpaperUrlInput.value = currentWallpaper;
-                } else {
-                    wallpaperUrlInput.value = '';
-                }
-            }
-        }
-    }
-
     // Open Application Window
     function openApp(appName, appId, event) { // Added event parameter
         try {
             hideAllContextMenus();
-            hideContextMenu();
             // Don't toggle start menu if the app is opened from context menu directly
             // only toggle if it was opened via a start menu item or icon
             if (event && (event.currentTarget.closest('#start-menu') || event.currentTarget.classList.contains('desktop-icon'))) {
                  toggleStartMenu();
             }
 
+            let clickedIconElement = null;
+            if (event && event.currentTarget.classList.contains('desktop-icon')) {
+                clickedIconElement = event.currentTarget;
+                setActiveDesktopIcon(clickedIconElement); // Set this icon as active
+            } else {
+                setActiveDesktopIcon(null); // Clear active icon if opened from start menu
+            }
+
 
             if (openWindows[appId]) {
                 // If app is already open, bring it to front or restore if minimized
-                const existingWindow = openWindows[appId];
-                if (existingWindow.classList.contains('minimized')) {
-                    existingWindow.classList.remove('minimized');
-                }
-                zIndexCounter++;
-                existingWindow.style.zIndex = zIndexCounter;
+                restoreWindow(openWindows[appId]);
                 return;
             }
 
-            // Ensure windowsContainer is defined when creating new windows
-            const currentWindowsContainer = document.getElementById('windows-container');
-            if (!currentWindowsContainer) {
-                console.error('Windows container not found, cannot open app.');
-                showMessage(`Error: System UI problem, cannot open ${appName}`);
-                return;
+            // Define icon HTML for window header
+            let iconHTML = '';
+            switch (appId) {
+                case 'file-explorer': iconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-lg"></i>'; break;
+                case 'browser': iconHTML = '<i class="fa-solid fa-globe text-purple-400 text-lg"></i>'; break;
+                case 'terminal': iconHTML = '<i class="fa-solid fa-terminal text-green-400 text-lg"></i>'; break;
+                case 'solar-panel': iconHTML = '<i class="fa-solid fa-solar-panel text-yellow-400 text-lg"></i>'; break;
+                case 'settings': iconHTML = '<i class="fa-solid fa-gear text-gray-400 text-lg"></i>'; break;
+                case 'about-windows': iconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Win13" class="w-5 h-5">'; break; // Smaller for header
+                case 'calculator': iconHTML = '<i class="fa-solid fa-calculator text-red-400 text-lg"></i>'; break;
+                case 'image-viewer': iconHTML = '<i class="fa-solid fa-image text-pink-400 text-lg"></i>'; break;
+                case 'todo-list': iconHTML = '<i class="fa-solid fa-list-check text-green-400 text-lg"></i>'; break;
+                case 'weather': iconHTML = '<i class="fa-solid fa-cloud-sun-rain text-blue-300 text-lg"></i>'; break;
+                case 'display-settings': iconHTML = '<i class="fa-solid fa-display text-blue-400 text-lg"></i>'; break;
+                case 'recycle-bin': iconHTML = '<i class="fa-solid fa-trash-can text-gray-500 text-lg"></i>'; break;
+                case 'code-editor': iconHTML = '<i class="fa-solid fa-code text-orange-400 text-lg"></i>'; break;
+                case 'windows-update': iconHTML = '<i class="fa-solid fa-cloud-arrow-down text-blue-500 text-lg"></i>'; break;
+                case 'date-time': iconHTML = '<i class="fa-solid fa-clock text-blue-400 text-lg"></i>'; break;
+                default: iconHTML = '<i class="fa-solid fa-cube text-gray-400 text-lg"></i>'; break;
             }
 
-            zIndexCounter++; // Increment z-index for new window
-
-            const windowElement = document.createElement('div');
-            windowElement.id = `window-${appId}`;
-            windowElement.className = `window flex flex-col opening`;
-            windowElement.style.zIndex = zIndexCounter;
-
-            // Re-enable pointer events for the new window
-            windowElement.style.pointerEvents = 'auto';
-
-
+            const windowElement = createNewWindow(appName, appId, iconHTML);
             let contentHTML = '';
-            let iconHTML = ''; // Use iconHTML for the actual icon/image tag
-            let bigIconHTML = ''; // For the large icon in the content area
+            let bigIconHTML = iconHTML.replace('text-lg', 'text-8xl mb-4 opacity-50'); // For larger icons in content area
 
             switch (appId) {
                 case 'file-explorer':
-                    iconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-lg"></i>';
-                    bigIconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
                         <div class="flex flex-col flex-grow p-4 overflow-auto">
                             <div class="flex items-center space-x-2 mb-4">
@@ -1906,8 +2318,6 @@
                     `;
                     break;
                 case 'browser':
-                    iconHTML = '<i class="fa-solid fa-globe text-purple-400 text-lg"></i>';
-                    bigIconHTML = '<i class="fa-solid fa-globe text-purple-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
                         <div class="flex items-center p-2 bg-gray-800 rounded-b-none border-b border-gray-700 relative z-10">
                             <input type="text" class="flex-grow rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="https://www.conceptbrowser.com" readonly>
@@ -1923,23 +2333,19 @@
                     `;
                     break;
                 case 'terminal':
-                    iconHTML = '<i class="fa-solid fa-terminal text-green-400 text-lg"></i>';
-                    bigIconHTML = '<i class="fa-solid fa-terminal text-green-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
-                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-green-300 rounded-b-lg relative">
-                             <div id="terminal-output" class="relative z-10 h-full overflow-y-auto pb-8">
-                                <p><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">${window.currentPath.replace(/\\/g, '/')}</span>$ Welcome to the Windows 13 Terminal! Type 'help' for commands.</p>
+                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-green-300 rounded-b-lg">
+                             <div id="terminal-output-${appId}" class="h-full overflow-y-auto pb-8">
+                                <pre><span class="text-blue-400">user@Glinux</span>:<span class="text-purple-400">${window.currentPath.replace(/\\/g, '/')}</span>$ Welcome to Glinux Terminal! Type 'help' for commands.</pre>
                              </div>
-                             <div class="relative z-10 flex items-center mt-2">
-                                <span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;
-                                <input type="text" id="terminal-input" class="flex-grow bg-transparent text-green-300 border-none outline-none caret-green-300 p-0" autofocus>
+                             <div class="flex items-center mt-2">
+                                <span class="text-blue-400">user@Glinux</span>:<span class="text-purple-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;
+                                <input type="text" id="terminal-input-${appId}" class="flex-grow bg-transparent text-green-300 border-none outline-none caret-green-300 p-0" autofocus>
                              </div>
                         </div>
                     `;
                     break;
                 case 'solar-panel':
-                    iconHTML = '<i class="fa-solid fa-solar-panel text-yellow-400 text-lg"></i>';
-                    bigIconHTML = '<i class="fa-solid fa-solar-panel text-yellow-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
                         <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center relative">
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -1960,8 +2366,6 @@
                     `;
                     break;
                 case 'settings':
-                    iconHTML = '<i class="fa-solid fa-gear text-gray-400 text-lg"></i>';
-                    // Settings app has a sidebar, so the main icon isn't needed in content
                     contentHTML = `
                         <div class="flex flex-row flex-grow">
                             <div class="settings-sidebar">
@@ -2110,8 +2514,8 @@
                     `;
                     break;
                 case 'about-windows':
-                    iconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-5 h-5">'; // Smaller for header
-                    bigIconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-20 h-20 mb-4 opacity-50">'; // Larger, semi-transparent
+                    // Update bigIconHTML for specific apps if needed
+                    bigIconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-20 h-20 mb-4 opacity-50">';
                     contentHTML = `
                         <div class="flex flex-col flex-grow relative">
                             <div class="flex border-b border-gray-700">
@@ -2133,16 +2537,19 @@
                             <div id="updates-content" class="p-4 flex-grow overflow-auto hidden flex flex-col items-center justify-center text-center">
                                 ${bigIconHTML}
                                 <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
-                                <!-- NEW UPDATE ENTRY START -->
+                                <!-- UPDATED V0.4.0 (Official) ENTRY START -->
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                                    <p class="font-bold text-lg mb-2">Version: V0.4.0 (BETA)</p>
-                                    <p class="text-blue-400 mb-2">Codename: New functions and alignment fixes</p>
+                                    <p class="font-bold text-lg mb-2">Version: V0.4.0 (Official)</p>
+                                    <p class="text-blue-400 mb-2">Codename: Stability & Feature Parity</p>
                                     <p class="text-gray-300">
-                                        This beta release brings significant improvements including persistent user settings via local storage,
-                                        enhanced login and account creation, a more interactive File Explorer, functional Terminal commands,
-                                        and refined window resizing behavior for a smoother user experience.
+                                        Thank you for your patience! This official release was delayed to ensure critical bug fixes,
+                                        performance optimizations, and feature completeness for a seamless user experience.
+                                        We've focused on enhancing underlying stability, refining UI animations, and implementing
+                                        robust error handling. This version brings all the promised features of the beta
+                                        into a production-ready state, ensuring reliability and a polished feel.
                                     </p>
                                 </div>
+                                <!-- UPDATED V0.4.0 (Official) ENTRY END -->
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
                                     <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
@@ -2202,8 +2609,6 @@
                     `;
                     break;
                 case 'date-time':
-                    iconHTML = '<i class="fa-solid fa-clock text-blue-400 text-lg"></i>';
-                    bigIconHTML = '<i class="fa-solid fa-clock text-blue-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
                         <div class="p-4 flex-grow overflow-auto relative flex flex-col justify-between">
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -2225,7 +2630,6 @@
                     `;
                     break;
                 case 'calculator':
-                    iconHTML = '<i class="fa-solid fa-calculator text-red-400 text-lg"></i>';
                     contentHTML = `
                         <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center">
                             <div class="w-full max-w-sm bg-gray-900 rounded-lg shadow-xl p-4">
@@ -2259,7 +2663,6 @@
                     `;
                     break;
                 case 'todo-list':
-                    iconHTML = '<i class="fa-solid fa-list-check text-green-400 text-lg"></i>';
                     contentHTML = `
                         <div class="p-4 flex-grow overflow-auto">
                             <h3 class="text-xl font-semibold mb-4">My To-Do List</h3>
@@ -2282,7 +2685,6 @@
                     `;
                     break;
                 case 'display-settings':
-                    iconHTML = '<i class="fa-solid fa-display text-blue-400 text-lg"></i>';
                     contentHTML = `
                         <div class="p-4 flex-grow overflow-auto">
                             <h3 class="text-xl font-semibold mb-4">Display Settings</h3>
@@ -2334,9 +2736,53 @@
                         </div>
                     `;
                     break;
+                case 'recycle-bin':
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center relative">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                ${bigIconHTML}
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-300 mb-2 relative z-10">Recycle Bin</h3>
+                            <p class="text-gray-400 max-w-sm text-center relative z-10">
+                                This is where deleted files go. Currently, it's empty.
+                                You can restore items or empty the recycle bin from here (conceptual).
+                            </p>
+                            <div class="mt-6 flex justify-center gap-4 relative z-10">
+                                <button class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg" onclick="showMessage('Recycle Bin emptied!');">
+                                    Empty Recycle Bin
+                                </button>
+                                <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('No items to restore!');">
+                                    Restore All Items
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'code-editor':
+                    contentHTML = `
+                        <div class="flex-grow flex flex-col">
+                            <div class="p-2 bg-gray-700 flex items-center justify-between">
+                                <span class="text-sm font-semibold text-gray-200">Untitled.txt</span>
+                                <div>
+                                    <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-md" onclick="showMessage('Save functionality requires a backend!');">Save</button>
+                                    <button class="bg-gray-600 hover:bg-gray-700 text-white text-xs px-3 py-1 rounded-md" onclick="showMessage('Load functionality requires a backend!');">Load</button>
+                                </div>
+                            </div>
+                            <textarea id="code-editor-textarea-${appId}" class="flex-grow w-full h-full p-4 bg-gray-900 text-white font-mono text-sm resize-none outline-none"></textarea>
+                        </div>
+                    `;
+                    break;
+                case 'windows-update':
+                    contentHTML = `
+                        <div class="p-4 text-center flex flex-col items-center justify-center h-full">
+                            <h2 class="text-xl font-semibold mb-4">Windows 13 Update</h2>
+                            <canvas id="update-canvas-${appId}" width="200" height="200" class="border border-blue-500 rounded-full mb-4"></canvas>
+                            <p id="update-status-${appId}" class="text-lg text-blue-400">Checking for updates...</p>
+                            <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg" onclick="startUpdateAnimation('${appId}')">Start Update</button>
+                        </div>
+                    `;
+                    break;
                 default:
-                    iconHTML = '<i class="fa-solid fa-cube text-gray-400 text-lg"></i>';
-                    bigIconHTML = '<i class="fa-solid fa-cube text-gray-400 text-8xl mb-4 opacity-50"></i>';
                     contentHTML = `
                         <div class="p-4 flex-grow overflow-auto relative">
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -2351,82 +2797,49 @@
                     `;
             }
 
-            windowElement.innerHTML = `
-                <div class="window-header flex items-center justify-between p-3">
-                    <div class="flex items-center gap-2">
-                        ${iconHTML}
-                        <span class="text-md font-semibold">${appName}</span>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button class="minimize-btn">
-                            <i class="fa-solid fa-minus"></i>
-                        </button>
-                        <button class="maximize-restore-btn">
-                            <i class="fa-regular fa-square"></i>
-                        </button>
-                        <button class="close-btn">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="window-content flex-grow overflow-auto relative">
-                    ${contentHTML}
-                </div>
-            `;
+            windowElement.querySelector('.window-content').innerHTML = contentHTML;
 
-            currentWindowsContainer.appendChild(windowElement);
-            openWindows[appId] = windowElement;
-
-            makeWindowDraggableAndResizable(windowElement, appId);
-
-            // Remove opening animation class after it completes
-            windowElement.addEventListener('animationend', () => {
-                windowElement.classList.remove('opening');
-            }, { once: true });
-
-            // Initialize app-specific logic
+            // Initialize app-specific logic after content is set
             if (appId === 'about-windows') {
-                setTimeout(() => {
-                    const aboutTabBtn = windowElement.querySelector('#about-tab-btn');
-                    const updatesTabBtn = windowElement.querySelector('#updates-tab-btn');
-                    if (aboutTabBtn) aboutTabBtn.addEventListener('click', () => showAboutTabForApp(windowElement, 'about'));
-                    if (updatesTabBtn) updatesTabBtn.addEventListener('click', () => showAboutTabForApp(windowElement, 'updates'));
-                    showAboutTabForApp(windowElement, 'about');
-                }, 50);
+                const aboutTabBtn = windowElement.querySelector('#about-tab-btn');
+                const updatesTabBtn = windowElement.querySelector('#updates-tab-btn');
+                if (aboutTabBtn) aboutTabBtn.addEventListener('click', () => showAboutTabForApp(windowElement, 'about'));
+                if (updatesTabBtn) updatesTabBtn.addEventListener('click', () => showAboutTabForApp(windowElement, 'updates'));
+                showAboutTabForApp(windowElement, 'about'); // Default to about tab
             } else if (appId === 'calculator') {
-                setTimeout(() => {
-                    initializeCalculator(windowElement);
-                }, 100);
+                initializeCalculator(windowElement);
             } else if (appId === 'todo-list') {
-                setTimeout(() => {
-                    initializeTodoList(windowElement);
-                }, 100);
+                initializeTodoList(windowElement);
             } else if (appId === 'display-settings') {
-                setTimeout(() => {
-                    initializeDisplaySettings(windowElement);
-                }, 100);
+                initializeDisplaySettings(windowElement);
             } else if (appId === 'settings') {
-                setTimeout(() => {
-                    showSettingsCategory(windowElement, 'system');
-                    windowElement.querySelectorAll('.settings-category-item').forEach(item => {
-                        item.addEventListener('click', () => {
-                            showSettingsCategory(windowElement, item.dataset.categoryId);
-                        });
+                showSettingsCategory(windowElement, 'system'); // Default to system settings
+                windowElement.querySelectorAll('.settings-category-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        showSettingsCategory(windowElement, item.dataset.categoryId);
                     });
-                }, 100);
+                });
             } else if (appId === 'date-time') {
-                setTimeout(() => {
-                    updateDateTimeApp(windowElement);
-                    setInterval(() => updateDateTimeApp(windowElement), 1000);
-                }, 100);
+                updateDateTimeApp(windowElement);
+                // Set interval for live updates within the app
+                windowElement._updateInterval = setInterval(() => updateDateTimeApp(windowElement), 1000);
+                 // Clear interval when window is closed
+                windowElement.querySelector('.close-btn').addEventListener('click', () => {
+                    if (windowElement._updateInterval) {
+                        clearInterval(windowElement._updateInterval);
+                    }
+                }, { once: true });
             } else if (appId === 'terminal') {
-                setTimeout(() => {
-                    initializeTerminal(windowElement);
-                }, 100);
+                initializeTerminal(windowElement);
             } else if (appId === 'file-explorer') {
-                setTimeout(() => {
-                    initializeFileExplorer(windowElement);
-                }, 100);
+                initializeFileExplorer(windowElement);
+            } else if (appId === 'windows-update') {
+                // Initial canvas draw for Windows Update
+                const canvas = windowElement.querySelector(`#update-canvas-${appId}`);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    drawUpdateCircle(ctx, canvas.width / 2, canvas.height / 2, 80, 0);
+                }
             }
 
 
@@ -2742,32 +3155,24 @@
 
     // --- Terminal Logic ---
     function initializeTerminal(terminalWindowElement) {
-        const terminalOutput = terminalWindowElement.querySelector('#terminal-output');
-        const terminalInput = terminalWindowElement.querySelector('#terminal-input');
-        const pathSpan = terminalInput.previousElementSibling.querySelector('span:last-child'); // Path span before input
+        const terminalOutput = terminalWindowElement.querySelector(`#terminal-output-${terminalWindowElement.id.replace('window-', '')}`);
+        const terminalInput = terminalWindowElement.querySelector(`#terminal-input-${terminalWindowElement.id.replace('window-', '')}`);
 
         function appendOutput(text, type = 'normal') {
-            const p = document.createElement('p');
+            const p = document.createElement('pre'); // Use pre for monospace and preserve whitespace
             p.textContent = text;
             if (type === 'error') p.classList.add('text-red-400');
-            if (type === 'command') p.innerHTML = `<span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;${text}`;
             terminalOutput.appendChild(p);
             terminalOutput.scrollTop = terminalOutput.scrollHeight; // Scroll to bottom
         }
 
-        function updateTerminalPath() {
-            if (pathSpan) {
-                pathSpan.textContent = window.currentPath.replace(/\\/g, '/');
-            }
-        }
-
         function executeCommand(command) {
-            appendOutput(command, 'command'); // Echo the command
+            appendOutput(`user@Glinux:${window.currentPath.replace(/\\/g, '/')}$ ${command}`); // Echo the command
             const parts = command.split(' ').filter(p => p !== '');
             const cmd = parts[0];
             const args = parts.slice(1);
 
-            switch (cmd) {
+            switch (cmd.toLowerCase()) { // Case-insensitive commands
                 case 'help':
                     appendOutput('Available commands:');
                     appendOutput('  ls - list directory contents');
@@ -2775,9 +3180,10 @@
                     appendOutput('  echo <message> - print message');
                     appendOutput('  clear - clear the terminal screen');
                     appendOutput('  pwd - print working directory');
+                    appendOutput('  glinux version - show Glinux OS version');
                     break;
                 case 'ls':
-                    listDirectory(terminalOutput);
+                    listDirectory(terminalOutput, window.currentPath);
                     break;
                 case 'cd':
                     changeDirectory(args[0], terminalOutput);
@@ -2791,6 +3197,13 @@
                 case 'pwd':
                     appendOutput(window.currentPath);
                     break;
+                case 'glinux':
+                    if (args[0] && args[0].toLowerCase() === 'version') {
+                        appendOutput('Glinux 3S Preview 4X');
+                    } else {
+                        appendOutput(`'glinux ${args.join(' ')}' is not a valid Glinux command.`, 'error');
+                    }
+                    break;
                 case '': // Empty command
                     break;
                 default:
@@ -2798,18 +3211,15 @@
                     break;
             }
             terminalInput.value = ''; // Clear input after command
-            updateTerminalPath();
         }
 
-        terminalInput.addEventListener('keypress', (e) => {
+        terminalInput.addEventListener('keydown', (e) => { // Use keydown to prevent default enter behavior
             if (e.key === 'Enter') {
                 e.preventDefault(); // Prevent new line in input
                 executeCommand(terminalInput.value.trim());
             }
         });
 
-        // Initial path update for the terminal
-        updateTerminalPath();
         terminalInput.focus(); // Focus input on open
     }
 
@@ -2827,30 +3237,36 @@
         return current;
     }
 
-    function listDirectory(outputElement) {
-        const contents = getDirectoryContents(window.currentPath);
+    function listDirectory(outputElement, currentPath) {
+        const contents = getDirectoryContents(currentPath);
         if (!contents) {
-            const p = document.createElement('p');
+            const p = document.createElement('pre');
             p.classList.add('text-red-400');
-            p.textContent = `Error: Cannot access '${window.currentPath}'`;
+            p.textContent = `Error: Cannot access '${currentPath}'`;
             outputElement.appendChild(p);
             return;
         }
 
         if (Object.keys(contents).length === 0) {
-            const p = document.createElement('p');
-            p.textContent = `Directory '${window.currentPath}' is empty.`;
+            const p = document.createElement('pre');
+            p.textContent = `Directory '${currentPath}' is empty.`;
             outputElement.appendChild(p);
             return;
         }
 
-        for (const item in contents) {
+        const sortedItems = Object.keys(contents).sort(); // Sort alphabetically
+        sortedItems.forEach(item => {
             const type = typeof contents[item] === 'object' ? 'DIR' : 'FILE';
-            const icon = type === 'DIR' ? '<i class="fa-solid fa-folder text-yellow-500 mr-2"></i>' : '<i class="fa-solid fa-file text-gray-500 mr-2"></i>';
-            const p = document.createElement('p');
-            p.innerHTML = `${icon} ${item} <span class="text-gray-500">(${type})</span>`;
+            let formattedItem = '';
+            if (type === 'DIR') {
+                formattedItem = `<span class="text-blue-300"><i class="fa-solid fa-folder mr-2"></i>${item}/</span>`;
+            } else {
+                formattedItem = `<span class="text-gray-300"><i class="fa-solid fa-file mr-2"></i>${item}</span>`;
+            }
+            const p = document.createElement('pre');
+            p.innerHTML = formattedItem;
             outputElement.appendChild(p);
-        }
+        });
     }
 
     function changeDirectory(dir, outputElement) {
@@ -2860,41 +3276,42 @@
         }
 
         let newPathParts = window.currentPath.split('\\').filter(p => p !== '');
+
         if (dir === '..') {
             if (newPathParts.length > 1) { // Prevent going above root C:
                 newPathParts.pop();
             }
         } else if (dir === '/') { // Go to root
             newPathParts = ['C:'];
-        } else if (dir.startsWith('C:\\')) { // Absolute path
+        } else if (dir.startsWith('C:\\') || dir.startsWith('c:\\')) { // Absolute path
             const absoluteParts = dir.split('\\').filter(p => p !== '');
             if (absoluteParts[0].toLowerCase() === 'c:') {
                 newPathParts = absoluteParts;
             } else {
-                showMessage(`Invalid path: ${dir}`, 'error');
+                appendOutput(`Invalid path: ${dir}`, 'error');
                 return;
             }
-        }
-        else {
+        } else { // Relative path
             newPathParts.push(dir);
         }
 
         const testPath = newPathParts.join('\\');
-        if (getDirectoryContents(testPath)) {
+        const resolvedPathContents = getDirectoryContents(testPath);
+
+        if (resolvedPathContents && typeof resolvedPathContents === 'object') { // Check if it's a valid directory object
             window.currentPath = testPath + (testPath.endsWith(':') ? '\\' : ''); // Ensure trailing slash for drives
-            // Update the terminal's displayed path
-            const terminalInput = outputElement.closest('.window-content').querySelector('#terminal-input');
-            if (terminalInput) {
-                 const pathSpan = terminalInput.previousElementSibling.querySelector('span:last-child');
-                 if (pathSpan) pathSpan.textContent = window.currentPath.replace(/\\/g, '/');
-            }
         } else {
-            const p = document.createElement('p');
-            p.classList.add('text-red-400');
-            p.textContent = `Directory not found: '${dir}'`;
-            outputElement.appendChild(p);
+            appendOutput(`Directory not found: '${dir}'`, 'error');
+        }
+
+        // Update the terminal's displayed path for the next prompt
+        const terminalInput = outputElement.closest('.window-content').querySelector('input[type="text"]');
+        if (terminalInput) {
+            const pathSpan = terminalInput.previousElementSibling.querySelector('span:last-child');
+            if (pathSpan) pathSpan.textContent = window.currentPath.replace(/\\/g, '/');
         }
     }
+
 
     // --- File Explorer Logic ---
     let feCurrentDirHandle = window.fileSystem['C:']; // Represents the current directory object
@@ -2937,7 +3354,7 @@
                         itemElement.addEventListener('click', () => {
                             // Conceptual file open
                             const fileContent = currentContents[item];
-                            showMessage(`Opened file: ${item}. Content: "${fileContent.substring(0, 50)}..."`);
+                            showMessage(`Opened file: ${item}. Content: "${fileContent.substring(0, Math.min(fileContent.length, 50))}..."`);
                             // In a real app, you'd open a text editor or appropriate viewer
                         });
                     }
@@ -2981,6 +3398,52 @@
         showMessage('Path copied to clipboard!');
     }
 
+    // --- Windows Update Canvas Logic ---
+    function drawUpdateCircle(ctx, x, y, radius, progress) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = '#374151'; // Gray background for the circle
+        ctx.lineWidth = 10;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progress));
+        ctx.strokeStyle = '#3B82F6'; // Blue for progress
+        ctx.lineWidth = 10;
+        ctx.stroke();
+
+        ctx.font = '24px Inter';
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${Math.round(progress * 100)}%`, x, y);
+    }
+
+    function startUpdateAnimation(appId) {
+        const canvas = document.getElementById(`update-canvas-${appId}`);
+        const ctx = canvas.getContext('2d');
+        const statusElement = document.getElementById(`update-status-${appId}`);
+        let progress = 0;
+        const duration = 5000; // 5 seconds for full update
+        const startTime = performance.now();
+
+        function animate(currentTime) {
+            const elapsedTime = currentTime - startTime;
+            progress = Math.min(elapsedTime / duration, 1);
+            drawUpdateCircle(ctx, canvas.width / 2, canvas.height / 2, 80, progress);
+            statusElement.textContent = `Updating... ${Math.round(progress * 100)}%`;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                statusElement.textContent = 'Update Complete!';
+                showMessage('Windows has been updated to Glinux 4X Preview!'); // Personalize message
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+
 
     // Initialize main desktop event listeners after the DOM is fully loaded
     function initializeDesktopListeners() {
@@ -3007,11 +3470,21 @@
 
         windowsContainer = document.getElementById('windows-container');
         startMenu = document.getElementById('start-menu');
-        startButton = document.getElementById('start-button');
+        standaloneStartButton = document.getElementById('standalone-start-button'); // Corrected variable name
         desktopContextMenu = document.getElementById('desktop-context-menu');
+        // taskbarApps = document.getElementById('taskbar-apps'); // This element was removed
+
+        internetVolumeContainer = document.getElementById('internet-volume-container'); // New reference
+        systemTimeBottom = document.getElementById('system-time-bottom'); // New reference
+        systemDateBottom = document.getElementById('system-date-bottom'); // New reference
+
 
         // Update document title
-        document.title = "Windows 13 Concept (V0.4.0 BETA)";
+        document.title = "Windows 13 Concept (V0.4.0 Official)"; // Updated title for official release
+
+        // Initialize the snap preview element once
+        initializeSnapPreview();
+
 
         // --- Attach event listeners to desktop icons dynamically ---
         const desktopIcons = document.querySelectorAll('.desktop-icon');
@@ -3025,19 +3498,36 @@
             }
         });
 
+        // Attach keyup event listener to password input programmatically
+        if (passwordInput) {
+            passwordInput.addEventListener('keyup', handleLoginEnter);
+        }
+
 
         // Event listeners for desktop, context menu, and start menu
         if (desktop) {
-            desktop.addEventListener('click', hideContextMenu);
-            desktop.addEventListener('contextmenu', showContextMenu);
+            desktop.addEventListener('click', (e) => {
+                hideAllContextMenus(); // Call hideAll to ensure context menu hides when clicking elsewhere
+                // If the click target is the desktop itself or related zones, deselect icon
+                if (e.target === desktop || e.target.id === 'desktop-icons-zone' || e.target.id === 'shortcuts-zone') {
+                    setActiveDesktopIcon(null);
+                }
+            });
+            desktop.addEventListener('contextmenu', (e) => {
+                setActiveDesktopIcon(null); // Deselect any active icon on right-click
+                showContextMenu(e);
+            });
         }
+        // This is crucial: stop propagation for clicks INSIDE the context menu
         if (desktopContextMenu) {
-            desktopContextMenu.addEventListener('click', (e) => e.stopPropagation());
+            desktopContextMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
         }
-        if (startMenu && startButton) {
+        if (startMenu && standaloneStartButton) { // Changed startButton to standaloneStartButton
             document.addEventListener('click', function(event) {
                 // If click is outside start menu and not on the start button, hide it
-                if (!startMenu.contains(event.target) && !startButton.contains(event.target) && !startMenu.classList.contains('hidden')) {
+                if (!startMenu.contains(event.target) && !standaloneStartButton.contains(event.target) && !startMenu.classList.contains('hidden')) { // Changed startButton to standaloneStartButton
                     toggleStartMenu(); // Use toggle function for animation
                 }
             });
