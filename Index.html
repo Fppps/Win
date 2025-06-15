@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 13 Concept</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts for custom typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Anime.js for advanced animations and transitions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js for web audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <!-- Embedded CSS styles -->
+    <style>
+        body {
+            /* Use Inter as the primary font, Source Sans 3 for specific elements */
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent body scroll */
+            cursor: default;
+            background-color: #1a1a1a; /* Fallback for body, desktop-env-container has the main background */
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        .window {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Center initially */
+            min-width: 300px;
+            min-height: 200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            resize: both; /* Enable native resize for now, will override with custom handle */
+        }
+
+        .window-header {
+            cursor: grab;
+            user-select: none;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .window-header:active {
+            cursor: grabbing;
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            bottom: 0;
+            right: 0;
+            cursor: se-resize;
+            background: transparent;
+            z-index: 10;
+        }
+
+        .maximized {
+            width: 100vw !important;
+            height: calc(100vh - 4rem) !important; /* Full height minus taskbar */
+            top: 0 !important;
+            left: 0 !important;
+            transform: none !important;
+            border-radius: 0 !important;
+        }
+
+        .minimized {
+            display: none !important; /* Hide when minimized, taskbar icon remains */
+        }
+
+        .start-menu {
+            position: absolute;
+            bottom: 4rem; /* Above taskbar */
+            left: 0.5rem;
+            width: 300px;
+            max-height: calc(100vh - 5rem);
+            overflow-y: auto;
+            transform-origin: bottom left;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+        }
+
+        .start-menu.hidden {
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .context-menu {
+            position: absolute;
+            z-index: 9999;
+            transform-origin: top left;
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+        }
+        .context-menu.hidden {
+            transform: scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Keyframe for window opening effect */
+        @keyframes window-open {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        .window.opening {
+            animation: window-open 0.2s ease-out forwards;
+        }
+
+        /* Keyframe for window closing effect */
+        @keyframes window-close {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+        .window.closing {
+            animation: window-close 0.2s ease-out forwards;
+        }
+
+
+        /* Desktop environment container will now hold the main background and be blurred */
+        #desktop-env-container {
+            position: fixed; /* Fix to viewport */
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url('Assets/Background/Background2.png') no-repeat center center / cover;
+            transition: filter 0.5s ease-out; /* Smooth transition for blur */
+            z-index: 1; /* Below login screen initially */
+            display: flex; /* Keep flex for its internal structure */
+            flex-direction: column; /* Keep flex for its internal structure */
+            /* Initial brightness - controlled by JS */
+            filter: brightness(100%);
+        }
+        #desktop-env-container.blurred {
+            filter: blur(5px);
+        }
+        /* When login is complete, desktop-env-container will become the primary view */
+        #desktop-env-container.desktop-active {
+            z-index: 10; /* Bring to front when active desktop */
+        }
+        /* Night Light effect */
+        #desktop-env-container.night-light-active {
+            filter: brightness(var(--desktop-brightness-value, 100%)) sepia(0.3) hue-rotate(-20deg);
+        }
+
+
+        /* Login screen styles */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: transparent; /* Allow blurred desktop to show through */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000; /* Ensure it's on top */
+            color: white;
+            transition: opacity 0.5s ease-out;
+        }
+        #login-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .login-card {
+            background: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
+            backdrop-filter: blur(20px); /* Frosted glass effect */
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translateY(20px); /* Initial position for animation */
+            opacity: 0; /* Initial opacity for animation */
+        }
+        .login-card.show {
+            transform: translateY(0);
+            opacity: 1;
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        }
+
+        /* Profile picture on login screen */
+        .profile-pic-login {
+            width: 96px; /* Reduced size */
+            height: 96px;
+            border-radius: 50%;
+            background-color: #3b82f6; /* A default blue for the user */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin-bottom: 24px;
+            color: white; /* Icon color */
+            overflow: hidden; /* Ensure avatar image fits */
+            border: 3px solid #60a5fa; /* Light blue border */
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); /* Glowing effect */
+        }
+        .profile-pic-login img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Welcome Back message */
+        .welcome-message {
+            font-size: 2.5rem; /* Larger font */
+            font-weight: 300; /* Light weight */
+            margin-bottom: 1.5rem;
+            opacity: 0; /* Hidden by default */
+            transform: translateY(-20px); /* Move up for animation */
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            color: #e0e7ff; /* Lighter blue-ish white */
+        }
+        .welcome-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+        /* Custom Message Box Styles */
+        #message-box {
+            position: fixed;
+            bottom: 5rem; /* Above taskbar */
+            right: 1rem;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 11000; /* Higher than windows */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            pointer-events: none; /* Allows clicks to pass through when hidden */
+        }
+        #message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto; /* Enable clicks when visible */
+        }
+
+        /* Loading Spinner for Login */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3b82f6; /* Blue spinner */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Ensure windows-container does not block clicks on desktop icons */
+        #windows-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none; /* Allow clicks to pass through to desktop icons/background initially */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="absolute top-8 left-8 text-white text-4xl font-light font-['Source_Sans_3']">
+            <span id="login-time"></span>
+            <div class="text-xl mt-1 font-['Source_Sans_3']" id="login-date"></div>
+        </div>
+
+        <div class="login-card">
+            <div class="profile-pic-login">
+                <i class="fa-solid fa-user"></i> <!-- Default user icon -->
+                <!-- <img src="assets/Profile/default_user.png" alt="User Profile Picture"> -->
+            </div>
+            <h2 class="welcome-message" id="welcome-message">Welcome Back, User Name</h2>
+            <div class="mb-6 w-full">
+                <input type="password" id="password-input" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center" placeholder="Enter password (any input)" onkeyup="handleLoginEnter(event)">
+            </div>
+            <button onclick="attemptLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg">
+                Sign In
+            </button>
+            <div id="login-spinner" class="loading-spinner"></div>
+            <p id="login-message" class="text-red-400 mt-4 text-sm hidden"></p>
+        </div>
+    </div>
+
+    <!-- Desktop Environment (initially blurred, then unblurred and active) -->
+    <div id="desktop-env-container" class="w-full h-full flex flex-col">
+        <!-- Actual Desktop Area (content above taskbar) -->
+        <div id="desktop" class="flex-grow grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 relative overflow-y-auto">
+            <!-- Desktop Icons -->
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="File Explorer" data-app-id="file-explorer">
+                <i class="fa-solid fa-folder-open text-blue-400 text-4xl"></i>
+                <span class="text-sm mt-1">File Explorer</span>
+            </div>
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Browser" data-app-id="browser">
+                <i class="fa-solid fa-globe text-purple-400 text-4xl"></i>
+                <span class="text-sm mt-1">Browser</span>
+            </div>
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Terminal" data-app-id="terminal">
+                <i class="fa-solid fa-terminal text-green-400 text-4xl"></i>
+                <span class="text-sm mt-1">Terminal</span>
+            </div>
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Solar Panel" data-app-id="solar-panel">
+                <i class="fa-solid fa-solar-panel text-yellow-400 text-4xl"></i>
+                <span class="text-sm mt-1">Solar Panel</span>
+            </div>
+            <!-- New Settings App Icon -->
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Settings" data-app-id="settings">
+                <i class="fa-solid fa-gear text-gray-400 text-4xl"></i>
+                <span class="text-sm mt-1">Settings</span>
+            </div>
+            <!-- New About Windows App Icon -->
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="About Windows 13" data-app-id="about-windows">
+                <img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-10 h-10">
+                <span class="text-sm mt-1 text-center">About Windows 13</span>
+            </div>
+            <!-- New Calculator App Icon -->
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Calculator" data-app-id="calculator">
+                <i class="fa-solid fa-calculator text-red-400 text-4xl"></i>
+                <span class="text-sm mt-1">Calculator</span>
+            </div>
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Image Viewer" data-app-id="image-viewer">
+                <i class="fa-solid fa-image text-pink-400 text-4xl"></i>
+                <span class="text-sm mt-1">Image Viewer</span>
+            </div>
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="To-Do List" data-app-id="todo-list">
+                <i class="fa-solid fa-list-check text-green-400 text-4xl"></i>
+                <span class="text-sm mt-1">To-Do List</span>
+            </div>
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Weather" data-app-id="weather">
+                <i class="fa-solid fa-cloud-sun-rain text-blue-300 text-4xl"></i>
+                <span class="text-sm mt-1">Weather</span>
+            </div>
+            <div class="desktop-icon flex flex-col items-center cursor-pointer p-2 rounded-lg hover:bg-gray-800 transition-colors transition-transform duration-150 hover:scale-105" data-app-name="Display Settings" data-app-id="display-settings">
+                <i class="fa-solid fa-display text-blue-400 text-4xl"></i>
+                <span class="text-sm mt-1 text-center">Display Settings</span>
+            </div>
+        </div>
+
+        <!-- Windows Container -->
+        <div id="windows-container" class="absolute inset-0">
+            <!-- Windows will be dynamically added here -->
+        </div>
+
+        <!-- Start Menu -->
+        <div id="start-menu" class="start-menu hidden bg-gray-800 bg-opacity-95 backdrop-blur-md rounded-lg p-4 shadow-xl z-50">
+            <h2 class="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">Start Menu</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('File Explorer', 'file-explorer'); toggleStartMenu()">
+                    <i class="fa-solid fa-folder-open text-blue-400 text-2xl"></i>
+                    <span class="text-xs mt-1">File Explorer</span>
+                </div>
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Browser', 'browser'); toggleStartMenu()">
+                    <i class="fa-solid fa-globe text-purple-400 text-2xl"></i>
+                    <span class="text-xs mt-1">Browser</span>
+                </div>
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Terminal', 'terminal'); toggleStartMenu()">
+                    <i class="fa-solid fa-terminal text-green-400 text-2xl"></i>
+                    <span class="text-xs mt-1">Terminal</span>
+                </div>
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Solar Panel', 'solar-panel'); toggleStartMenu()">
+                    <i class="fa-solid fa-solar-panel text-yellow-400 text-2xl"></i>
+                    <span class="text-xs mt-1">Solar Panel</span>
+                </div>
+                <!-- New Settings App Start Menu Item -->
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Settings', 'settings'); toggleStartMenu()">
+                    <i class="fa-solid fa-gear text-gray-400 text-2xl"></i>
+                    <span class="text-xs mt-1">Settings</span>
+                </div>
+                <!-- New About Windows App Start Menu Item -->
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('About Windows 13', 'about-windows'); toggleStartMenu()">
+                    <img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-8 h-8">
+                    <span class="text-xs mt-1 text-center">About Windows 13</span>
+                </div>
+                <!-- New Calculator App Start Menu Item -->
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Calculator', 'calculator'); toggleStartMenu()">
+                    <i class="fa-solid fa-calculator text-red-400 text-2xl"></i>
+                    <span class="text-xs mt-1">Calculator</span>
+                </div>
+                <!-- New Image Viewer App Start Menu Item -->
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Image Viewer', 'image-viewer'); toggleStartMenu()">
+                    <i class="fa-solid fa-image text-pink-400 text-2xl"></i>
+                    <span class="text-xs mt-1">Image Viewer</span>
+                </div>
+                <!-- NEW: To-Do List App Start Menu Item -->
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('To-Do List', 'todo-list'); toggleStartMenu()">
+                    <i class="fa-solid fa-list-check text-green-400 text-2xl"></i>
+                    <span class="text-xs mt-1">To-Do List</span>
+                </div>
+                <!-- NEW: Weather App Start Menu Item -->
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Weather', 'weather'); toggleStartMenu()">
+                    <i class="fa-solid fa-cloud-sun-rain text-blue-300 text-2xl"></i>
+                    <span class="text-xs mt-1">Weather</span>
+                </div>
+                 <!-- NEW: Display Settings Start Menu Item -->
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); toggleStartMenu()">
+                    <i class="fa-solid fa-display text-blue-400 text-2xl"></i>
+                    <span class="text-xs mt-1 text-center">Display Settings</span>
+                </div>
+                <div class="start-menu-item flex flex-col items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer" onclick="showMessage('Power Options!'); toggleStartMenu()">
+                    <i class="fa-solid fa-power-off text-red-400 text-2xl"></i>
+                    <span class="text-xs mt-1">Power</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Context Menu -->
+        <div id="desktop-context-menu" class="context-menu hidden bg-gray-800 bg-opacity-95 backdrop-blur-md rounded-lg p-2 shadow-xl z-50 text-sm">
+            <div class="py-1 px-3 hover:bg-blue-700 rounded-md cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); hideContextMenu()">Display settings</div>
+            <div class="py-1 px-3 hover:bg-blue-700 rounded-md cursor-pointer" onclick="showMessage('Personalize opened!'); hideContextMenu()">Personalize</div>
+            <div class="py-1 px-3 hover:bg-blue-700 rounded-md cursor-pointer" onclick="showMessage('New folder created!'); hideContextMenu()">New Folder</div>
+        </div>
+
+    </div>
+
+    <!-- Taskbar -->
+    <div class="h-16 bg-gray-800 bg-opacity-90 backdrop-blur-md flex items-center justify-between px-4 z-40">
+        <!-- Start Button -->
+        <button id="start-button" class="flex items-center justify-center w-12 h-12 rounded-full hover:bg-blue-600 focus:outline-none transition-colors" onclick="toggleStartMenu()">
+            <i class="fa-brands fa-windows text-blue-400 text-2xl"></i>
+        </button>
+
+        <!-- Taskbar Icons for open applications -->
+        <div id="taskbar-apps" class="flex items-center space-x-2 flex-grow justify-center">
+            <!-- App icons will be dynamically added here -->
+        </div>
+
+        <!-- System Tray -->
+        <div class="flex items-center space-x-4 text-sm">
+            <span id="system-time"></span>
+            <span id="system-date"></span>
+            <i class="fa-solid fa-wifi"></i>
+            <i class="fa-solid fa-volume-high"></i>
+        </div>
+    </div>
+</div> <!-- End desktop-env-container -->
+
+<!-- Custom Message Box -->
+<div id="message-box" class="hidden"></div>
+
+<!-- Embedded JavaScript code -->
+<script>
+    // Global variables for DOM elements, assigned in initializeDesktopListeners()
+    let desktopEnvContainer;
+    let loginScreen;
+    let passwordInput;
+    let loginTimeDisplay;
+    let loginDateDisplay;
+    let loginSpinner;
+    let loginCard; // New variable for login card
+    let welcomeMessage; // New variable for welcome message
+
+    let desktop;
+    let windowsContainer;
+    let startMenu;
+    let startButton;
+    let taskbarApps;
+    let desktopContextMenu;
+
+    let zIndexCounter = 1000;
+    let openWindows = {}; // Stores references to open window elements by app id
+
+    // --- Tone.js Synth for Boot Sound ---
+    const bootSynth = new Tone.Synth().toDestination();
+
+    function playBootSound() {
+        // Simple ascending arpeggio
+        bootSynth.triggerAttackRelease("C4", "8n", Tone.now());
+        bootSynth.triggerAttackRelease("E4", "8n", Tone.now() + 0.1);
+        bootSynth.triggerAttackRelease("G4", "8n", Tone.now() + 0.2);
+        bootSynth.triggerAttackRelease("C5", "4n", Tone.now() + 0.3);
+    }
+
+    // --- Utility Functions ---
+
+    // Function to display a custom message box
+    function showMessage(message, duration = 3000) {
+        const messageBox = document.getElementById('message-box');
+        if (messageBox) {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('show');
+
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+                // Hide completely after transition
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 300); // Match CSS transition duration for opacity/transform
+            }, duration);
+        } else {
+            console.warn('Message box element not found!');
+        }
+    }
+
+    // --- Core OS Functions ---
+
+    // Function to update time and date for both login screen and taskbar
+    function updateTimeAndDate() {
+        try {
+            const now = new Date();
+            const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
+
+            // Update login screen time and date
+            if (loginTimeDisplay) loginTimeDisplay.textContent = now.toLocaleTimeString([], timeOptions);
+            if (loginDateDisplay) loginDateDisplay.textContent = now.toLocaleDateString(undefined, dateOptions);
+
+            // Update taskbar time and date (if desktop is visible)
+            const systemTimeElement = document.getElementById('system-time');
+            const systemDateElement = document.getElementById('system-date');
+            // Only update if desktop-env-container is meant to be the active desktop (not blurred for login)
+            if (systemTimeElement && systemDateElement && desktopEnvContainer && desktopEnvContainer.classList.contains('desktop-active')) {
+                systemTimeElement.textContent = now.toLocaleTimeString([], timeOptions);
+                systemDateElement.textContent = now.toLocaleDateString();
+            }
+        } catch (error) {
+            console.error('Error in updateTimeAndDate:', error);
+            // showMessage(`Error updating time: ${error.message}`); // Optional: show user an error
+        }
+    }
+
+    // Function to handle login transition
+    function attemptLogin() {
+        try {
+            // Show spinner
+            if (loginSpinner) loginSpinner.classList.add('show');
+
+            // Play boot sound
+            playBootSound();
+
+            // Animate login screen fading out
+            if (loginScreen) {
+                anime({
+                    targets: loginScreen,
+                    opacity: 0,
+                    duration: 800, // Longer duration for effect with spinner
+                    easing: 'easeOutQuad',
+                    complete: function() {
+                        if (loginScreen) loginScreen.classList.add('hidden'); // Completely hide login screen
+                        if (loginSpinner) loginSpinner.classList.remove('show'); // Hide spinner
+
+                        // Unblur the desktop environment and make it the active display
+                        if (desktopEnvContainer) {
+                            desktopEnvContainer.classList.remove('blurred');
+                            desktopEnvContainer.classList.add('desktop-active'); // Mark as active desktop
+                        }
+                    }
+                });
+            } else {
+                console.error('loginScreen not found for animation.');
+                if (loginSpinner) loginSpinner.classList.remove('show'); // Hide spinner on error
+            }
+        } catch (error) {
+            console.error('Error during login attempt:', error);
+            showMessage(`Login failed: ${error.message}`);
+            if (loginSpinner) loginSpinner.classList.remove('show'); // Ensure spinner is hidden on error
+        }
+    }
+
+    // Handle Enter key press on password input for login
+    function handleLoginEnter(event) {
+        if (event.key === 'Enter') {
+            attemptLogin();
+        }
+    }
+
+    // Function to toggle Start Menu visibility
+    function toggleStartMenu() {
+        try {
+            // Retrieve element when function is called, as 'startMenu' global might be null on initial script load
+            const startMenuElement = document.getElementById('start-menu');
+            if (startMenuElement) {
+                startMenuElement.classList.toggle('hidden');
+            } else {
+                console.warn('Start menu element not found.');
+            }
+        } catch (error) {
+            console.error('Error toggling start menu:', error);
+            showMessage(`Error: Cannot open Start Menu`);
+        }
+    }
+
+    // Function to hide all context menus
+    function hideAllContextMenus() {
+        try {
+            const desktopContextMenuElement = document.getElementById('desktop-context-menu');
+            if (desktopContextMenuElement) {
+                desktopContextMenuElement.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error hiding all context menus:', error);
+        }
+    }
+
+    // Show desktop context menu
+    function showContextMenu(event) {
+        event.preventDefault(); // Prevent default browser context menu
+        hideAllContextMenus(); // This will now get the element itself
+
+        try {
+            const desktopContextMenuElement = document.getElementById('desktop-context-menu');
+            if (desktopContextMenuElement) {
+                desktopContextMenuElement.style.left = `${event.clientX}px`;
+                desktopContextMenuElement.style.top = `${event.clientY}px`;
+                desktopContextMenuElement.classList.remove('hidden');
+            } else {
+                console.warn('Desktop context menu element not found.');
+            }
+        } catch (error) {
+            console.error('Error showing context menu:', error);
+            showMessage(`Error: Cannot display context menu`);
+        }
+    }
+
+    // Hide desktop context menu
+    function hideContextMenu() {
+        try {
+            const desktopContextMenuElement = document.getElementById('desktop-context-menu');
+            if (desktopContextMenuElement) {
+                desktopContextMenuElement.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error hiding context menu:', error);
+        }
+    }
+
+
+    // Draggable and Resizable Window Logic
+    function makeWindowDraggableAndResizable(windowElement, appId) {
+        const header = windowElement.querySelector('.window-header');
+        let isDragging = false;
+        let isResizing = false;
+        let currentX, currentY, initialX, initialY;
+        let initialWidth, initialHeight;
+
+        // Z-index management: bring clicked window to front
+        windowElement.addEventListener('mousedown', () => {
+            zIndexCounter++;
+            windowElement.style.zIndex = zIndexCounter;
+        });
+
+        // Dragging
+        if (header) {
+            header.addEventListener('mousedown', (e) => {
+                try {
+                    if (windowElement.classList.contains('maximized')) return; // Cannot drag when maximized
+                    isDragging = true;
+                    initialX = e.clientX - windowElement.getBoundingClientRect().left;
+                    initialY = e.clientY - windowElement.getBoundingClientRect().top;
+                    header.style.cursor = 'grabbing';
+                } catch (error) {
+                    console.error('Error on header mousedown:', error);
+                }
+            });
+        }
+
+        // Event listener for mousemove on the whole document for dragging/resizing
+        document.addEventListener('mousemove', (e) => {
+            try {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+
+                    // Constrain window to desktop bounds
+                    // Ensure 'desktop' element is available before calling getBoundingClientRect
+                    const desktopElement = document.getElementById('desktop');
+                    if (!desktopElement) {
+                        console.error('Desktop element not found for drag/resize bounds.');
+                        return;
+                    }
+                    const desktopRect = desktopElement.getBoundingClientRect();
+                    const windowRect = windowElement.getBoundingClientRect();
+
+                    currentX = Math.max(desktopRect.left, Math.min(currentX, desktopRect.right - windowRect.width));
+                    currentY = Math.max(desktopRect.top, Math.min(currentY, desktopRect.bottom - windowRect.height));
+
+                    windowElement.style.left = `${currentX}px`;
+                    windowElement.style.top = `${currentY}px`;
+                    windowElement.style.transform = 'none'; // Remove centering transform when dragged
+                } else if (isResizing) {
+                    e.preventDefault();
+                    const newWidth = e.clientX - windowElement.getBoundingClientRect().left;
+                    const newHeight = e.clientY - windowElement.getBoundingClientRect().top;
+
+                    // Enforce minimum size
+                    windowElement.style.width = `${Math.max(newWidth, windowElement.minWidth || 300)}px`;
+                    windowElement.style.height = `${Math.max(newHeight, windowElement.minHeight || 200)}px`;
+                }
+            } catch (error) {
+                console.error('Error during window drag/resize:', error);
+                isDragging = false; // Stop operation on error
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            }
+        });
+
+        // Event listener for mouseup on the whole document to stop dragging/resizing
+        document.addEventListener('mouseup', () => {
+            try {
+                isDragging = false;
+                isResizing = false;
+                if (header) header.style.cursor = 'grab'; // Restore cursor if header exists
+                document.body.style.cursor = 'default';
+            } catch (error) {
+                console.error('Error on mouseup:', error);
+            }
+        });
+
+
+        // Resizing (custom handle)
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'resize-handle';
+        windowElement.appendChild(resizeHandle);
+
+        if (resizeHandle) {
+            resizeHandle.addEventListener('mousedown', (e) => {
+                try {
+                    if (windowElement.classList.contains('maximized')) return; // Cannot resize when maximized
+                    isResizing = true;
+                    initialX = e.clientX;
+                    initialY = e.clientY;
+                    initialWidth = windowElement.offsetWidth;
+                    initialHeight = windowElement.offsetHeight;
+                    e.stopPropagation(); // Prevent dragging from starting
+                } catch (error) {
+                    console.error('Error on resize handle mousedown:', error);
+                }
+            });
+        }
+
+        // Window controls
+        const minimizeBtn = windowElement.querySelector('.minimize-btn');
+        const maximizeRestoreBtn = windowElement.querySelector('.maximize-restore-btn');
+        const closeBtn = windowElement.querySelector('.close-btn');
+        // taskbarIcon is retrieved inside openApp or through direct getElementById when needed.
+
+        // Minimize
+        if (minimizeBtn) {
+            minimizeBtn.addEventListener('click', () => {
+                try {
+                    const currentTaskbarIcon = document.getElementById(`taskbar-icon-${appId}`); // Get it here
+                    windowElement.classList.add('minimized');
+                    if (currentTaskbarIcon) currentTaskbarIcon.classList.remove('bg-blue-700'); // Remove active state from taskbar icon
+                } catch (error) {
+                    console.error('Error minimizing window:', error);
+                    showMessage(`Error minimizing ${appId}`);
+                }
+            });
+        }
+
+        // Maximize/Restore
+        if (maximizeRestoreBtn) {
+            maximizeRestoreBtn.addEventListener('click', () => {
+                try {
+                    if (windowElement.classList.contains('maximized')) {
+                        // Restore
+                        windowElement.classList.remove('maximized');
+                        maximizeRestoreBtn.innerHTML = '<i class="fa-regular fa-square"></i>'; // Maximize icon
+                        // Restore previous position and size if stored
+                        if (windowElement.dataset.prevLeft && windowElement.dataset.prevTop &&
+                            windowElement.dataset.prevWidth && windowElement.dataset.prevHeight) {
+                            windowElement.style.left = windowElement.dataset.prevLeft;
+                            windowElement.style.top = windowElement.dataset.prevTop;
+                            windowElement.style.width = windowElement.dataset.prevWidth;
+                            windowElement.style.height = windowElement.dataset.prevHeight;
+                            windowElement.style.transform = windowElement.dataset.prevTransform || '';
+                        }
+                    } else {
+                        // Maximize
+                        // Store current position and size
+                        windowElement.dataset.prevLeft = windowElement.style.left;
+                        windowElement.dataset.prevTop = windowElement.style.top;
+                        windowElement.dataset.prevWidth = windowElement.style.width;
+                        windowElement.dataset.prevHeight = windowElement.style.height;
+                        windowElement.dataset.prevTransform = windowElement.style.transform;
+
+                        windowElement.classList.add('maximized');
+                        maximizeRestoreBtn.innerHTML = '<i class="fa-solid fa-compress"></i>'; // Restore icon
+                    }
+                } catch (error) {
+                    console.error('Error maximizing/restoring window:', error);
+                    showMessage(`Error with ${appId} window size`);
+                }
+            });
+        }
+
+        // Close
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                try {
+                    // Add closing animation class
+                    windowElement.classList.add('closing');
+
+                    // Listen for animation end before removing
+                    windowElement.addEventListener('animationend', () => {
+                        windowElement.remove();
+                        delete openWindows[appId];
+                        const currentTaskbarIcon = document.getElementById(`taskbar-icon-${appId}`); // Get it here
+                        if (currentTaskbarIcon) currentTaskbarIcon.remove(); // Remove taskbar icon
+                    }, { once: true }); // Ensure listener runs only once
+                } catch (error) {
+                    console.error('Error closing window:', error);
+                    showMessage(`Error closing ${appId}`);
+                }
+            });
+        }
+
+        // Taskbar icon click to minimize/restore/bring to front
+        const currentTaskbarIconForListener = document.getElementById(`taskbar-icon-${appId}`);
+        if (currentTaskbarIconForListener) {
+            currentTaskbarIconForListener.addEventListener('click', () => {
+                try {
+                    if (windowElement.classList.contains('minimized')) {
+                        windowElement.classList.remove('minimized');
+                        zIndexCounter++;
+                        windowElement.style.zIndex = zIndexCounter; // Bring to front
+                        currentTaskbarIconForListener.classList.add('bg-blue-700');
+                    } else {
+                        // If already open, bring to front or minimize
+                        if (parseInt(windowElement.style.zIndex) === zIndexCounter) {
+                            windowElement.classList.add('minimized');
+                            currentTaskbarIconForListener.classList.remove('bg-blue-700');
+                        } else {
+                            zIndexCounter++;
+                            windowElement.style.zIndex = zIndexCounter; // Bring to front
+                            currentTaskbarIconForListener.classList.add('bg-blue-700');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error with taskbar icon click for window:', error);
+                    showMessage(`Error interacting with ${appId} from taskbar`);
+                }
+            });
+        }
+    }
+
+    // Function to handle tab switching specifically for the "About Windows 13" app
+    function showAboutTabForApp(parentWindow, tabName) {
+        const aboutContent = parentWindow.querySelector('#about-content');
+        const updatesContent = parentWindow.querySelector('#updates-content');
+        const aboutTabBtn = parentWindow.querySelector('#about-tab-btn');
+        const updatesTabBtn = parentWindow.querySelector('#updates-tab-btn');
+
+        if (tabName === 'about') {
+            if(aboutContent) aboutContent.classList.remove('hidden');
+            if(updatesContent) updatesContent.classList.add('hidden');
+            if(aboutTabBtn) {
+                aboutTabBtn.classList.add('bg-blue-700');
+                aboutTabBtn.classList.remove('bg-gray-800', 'hover:bg-gray-700');
+            }
+            if(updatesTabBtn) {
+                updatesTabBtn.classList.remove('bg-blue-700');
+                updatesTabBtn.classList.add('bg-gray-800', 'hover:bg-gray-700');
+            }
+        } else if (tabName === 'updates') {
+            if(aboutContent) aboutContent.classList.add('hidden');
+            if(updatesContent) updatesContent.classList.remove('hidden');
+            if(aboutTabBtn) {
+                aboutTabBtn.classList.remove('bg-blue-700');
+                aboutTabBtn.classList.add('bg-gray-800', 'hover:bg-gray-700');
+            }
+            if(updatesTabBtn) {
+                updatesTabBtn.classList.add('bg-blue-700');
+                updatesTabBtn.classList.remove('bg-gray-800', 'hover:bg-gray-700');
+            }
+        }
+    }
+
+    // Open Application Window
+    function openApp(appName, appId) {
+        try {
+            hideAllContextMenus();
+            hideContextMenu();
+
+            if (openWindows[appId]) {
+                // If app is already open, bring it to front or restore if minimized
+                const existingWindow = openWindows[appId];
+                if (existingWindow.classList.contains('minimized')) {
+                    existingWindow.classList.remove('minimized');
+                }
+                zIndexCounter++;
+                existingWindow.style.zIndex = zIndexCounter;
+                const existingTaskbarIcon = document.getElementById(`taskbar-icon-${appId}`);
+                if (existingTaskbarIcon) existingTaskbarIcon.classList.add('bg-blue-700');
+                return;
+            }
+
+            // Ensure windowsContainer is defined when creating new windows
+            const currentWindowsContainer = document.getElementById('windows-container');
+            if (!currentWindowsContainer) {
+                console.error('Windows container not found, cannot open app.');
+                showMessage(`Error: System UI problem, cannot open ${appName}`);
+                return;
+            }
+
+            zIndexCounter++; // Increment z-index for new window
+
+            const windowElement = document.createElement('div');
+            windowElement.id = `window-${appId}`;
+            windowElement.className = `window bg-gray-900 bg-opacity-95 backdrop-blur-lg border border-gray-700 text-gray-100 flex flex-col opening`;
+            windowElement.style.zIndex = zIndexCounter;
+            windowElement.style.width = '70%'; // Initial width
+            windowElement.style.height = '70%'; // Initial height
+            // Centering is handled by CSS transform initially
+
+            // Re-enable pointer events for the new window
+            windowElement.style.pointerEvents = 'auto';
+
+
+            let contentHTML = '';
+            let iconHTML = ''; // Use iconHTML for the actual icon/image tag
+
+            switch (appId) {
+                case 'file-explorer':
+                    iconHTML = '<i class="fa-solid fa-folder-open text-blue-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto">
+                            <h3 class="text-xl font-semibold mb-3">My PC</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-solid fa-hard-drive text-gray-500"></i> Local Disk (C:)
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-solid fa-folder text-yellow-500"></i> Documents
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-solid fa-folder text-yellow-500"></i> Downloads
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-solid fa-image text-purple-500"></i> Pictures
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-solid fa-music text-green-500"></i> Music
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-solid fa-video text-red-500"></i> Videos
+                                </li>
+                            </ul>
+                            <div class="mt-4 p-3 bg-gray-800 rounded-md">
+                                <p class="text-sm">Welcome to your Windows 13 File Explorer! This is a simplified concept.</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'browser':
+                    iconHTML = '<i class="fa-solid fa-globe text-purple-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="flex items-center p-2 bg-gray-800 rounded-b-none border-b border-gray-700">
+                            <input type="text" class="flex-grow bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="https://www.conceptbrowser.com" readonly>
+                            <button class="ml-2 p-1 rounded-full hover:bg-gray-600 text-gray-400"><i class="fa-solid fa-sync"></i></button>
+                        </div>
+                        <div class="p-4 flex-grow overflow-auto text-center flex flex-col items-center justify-center">
+                            <i class="fa-solid fa-fire text-orange-500 text-6xl mb-4"></i>
+                            <p class="text-lg text-gray-400">Welcome to the future of browsing!</p>
+                            <p class="text-sm text-gray-500 mt-2">This is a conceptual browser for Windows 13.</p>
+                        </div>
+                    `;
+                    break;
+                case 'terminal':
+                    iconHTML = '<i class="fa-solid fa-terminal text-green-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-green-300 rounded-b-lg">
+                            <p><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ ls -la</p>
+                            <p class="text-yellow-300">total 16</p>
+                            <p>drwxr-xr-x 4 user user 4096 Jun 15 05:26 .</p>
+                            <p>drwxr-xr-x 3 user user 4096 Jun 15 05:20 ..</p>
+                            <p>drwxr-xr-x 2 user user 4096 Jun 15 05:26 Documents</p>
+                            <p>drwxr-xr-x 2 user user 4096 Jun 15 05:26 Desktop</p>
+                            <p><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ echo "Hello from Windows 13!"</p>
+                            <p>Hello from Windows 13!</p>
+                            <p><span class="text-blue-400">user@Windows13</span>:<span class="text-purple-400">/home/user</span>$ _</p>
+                        </div>
+                    `;
+                    break;
+                case 'solar-panel':
+                    iconHTML = '<i class="fa-solid fa-solar-panel text-yellow-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
+                            <i class="fa-solid fa-solar-panel text-yellow-400 text-6xl mb-4"></i>
+                            <h3 class="text-2xl font-bold text-yellow-300 mb-2">Solar Panel Dashboard</h3>
+                            <p class="text-gray-300 max-w-sm">
+                                Monitor your solar energy production and consumption in real-time. This is a conceptual application.
+                            </p>
+                            <div class="mt-4 text-sm">
+                                <p>Current Output: <span class="font-bold text-green-400">1.2 kW</span></p>
+                                <p>Daily Production: <span class="font-bold text-blue-400">8.5 kWh</span></p>
+                            </div>
+                            <button class="mt-6 px-6 py-2 bg-gradient-to-r from-yellow-600 to-orange-500 text-white rounded-full shadow-lg hover:from-yellow-700 hover:to-orange-600 transition-all">
+                                View Analytics
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'settings':
+                    iconHTML = '<i class="fa-solid fa-gear text-gray-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="flex-grow p-4 overflow-auto">
+                            <h3 class="text-xl font-semibold mb-3">Settings</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); this.closest('.window').querySelector('.close-btn').click();">
+                                    <i class="fa-solid fa-display text-blue-400"></i> Display
+                                </li>
+                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                                    <i class="fa-solid fa-volume-high text-yellow-400"></i> Sound
+                                </li>
+                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                                    <i class="fa-solid fa-network-wired text-green-400"></i> Network & Internet
+                                </li>
+                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                                    <i class="fa-solid fa-user-circle text-purple-400"></i> Accounts
+                                </li>
+                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                                    <i class="fa-solid fa-sliders text-red-400"></i> Personalization
+                                </li>
+                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                                    <i class="fa-solid fa-wrench text-blue-400"></i> Windows Update
+                                </li>
+                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                                    <i class="fa-solid fa-info-circle text-gray-500"></i> About
+                                </li>
+                            </ul>
+                            <div class="mt-4 p-3 bg-gray-800 rounded-md">
+                                <p class="text-sm">This is a conceptual settings panel. Functionality is limited.</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'about-windows':
+                    iconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-5 h-5">'; // Smaller for header
+                    contentHTML = `
+                        <div class="flex flex-col flex-grow">
+                            <div class="flex border-b border-gray-700">
+                                <button id="about-tab-btn" class="px-4 py-2 border-r border-gray-700 bg-blue-700 rounded-t-lg transition-colors">About</button>
+                                <button id="updates-tab-btn" class="px-4 py-2 rounded-t-lg hover:bg-gray-700 transition-colors">Updates</button>
+                            </div>
+                            <div id="about-content" class="p-4 flex-grow overflow-auto">
+                                <h3 class="text-xl font-semibold mb-3">About Windows 13 Concept</h3>
+                                <p class="text-gray-300 mb-4">
+                                    Welcome to Windows 13, a conceptual operating system designed to showcase modern UI/UX principles.
+                                    This is a preview of what the future of desktop computing could look like.
+                                </p>
+                                <p class="text-gray-400 mt-4">
+                                    For a glimpse into past concepts, you might be interested in the
+                                    <a href="https://lttthedev.github.io/desktop.html" target="_blank" class="text-blue-400 hover:underline">Windows 12 demo website</a>.
+                                </p>
+                            </div>
+                            <div id="updates-content" class="p-4 flex-grow overflow-auto hidden">
+                                <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
+                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                                    <p class="font-bold text-lg mb-2">Version: 0.3.4</p>
+                                    <p class="text-blue-400 mb-2">Codename: Login Patch & boot up sounds</p>
+                                    <p class="text-gray-300">
+                                        This update revamps the login screen with a modern aesthetic and introduces a subtle boot-up sound for a more immersive experience.
+                                    </p>
+                                </div>
+                                <div class="bg-gray-800 p-4 rounded-lg">
+                                    <p class="font-bold text-lg mb-2">Version: 0.3.0</p>
+                                    <p class="text-blue-400 mb-2">Codename: Desktop columns & a Windows Update setting (alpha version)</p>
+                                    <p class="text-gray-300">
+                                        This update introduces a more organized desktop layout with columns and adds
+                                        a conceptual Windows Update setting for future expansion.
+                                    </p>
+                                </div>
+                                <p class="text-gray-500 text-sm mt-4">Check back for more exciting updates!</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'calculator':
+                    iconHTML = '<i class="fa-solid fa-calculator text-red-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center">
+                            <div class="bg-gray-700 p-4 rounded-lg shadow-lg">
+                                <input type="text" id="calc-display" class="w-full text-right text-3xl font-mono bg-gray-900 text-white rounded-md p-2 mb-4" value="0" readonly>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button class="calc-btn col-span-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">C</button>
+                                    <button class="calc-btn bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">&larr;</button>
+                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">/</button>
+
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">7</button>
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">8</button>
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">9</button>
+                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">*</button>
+
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">4</button>
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">5</button>
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">6</button>
+                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">-</button>
+
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">1</button>
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">2</button>
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">3</button>
+                                    <button class="calc-btn bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md">+</button>
+
+                                    <button class="calc-btn col-span-2 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">0</button>
+                                    <button class="calc-btn bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">.</button>
+                                    <button class="calc-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">=</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'image-viewer':
+                    iconHTML = '<i class="fa-solid fa-image text-pink-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-hidden flex flex-col items-center justify-center">
+                            <img src="https://placehold.co/400x300/F0F0F0/ADADAD?text=Image+Placeholder" alt="Placeholder Image" class="max-w-full max-h-full object-contain rounded-lg shadow-md mb-4">
+                            <p class="text-gray-300">A conceptual image viewer. Click to load another image.</p>
+                            <button class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Loading next image (conceptual)...');">
+                                Next Image
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'todo-list':
+                    iconHTML = '<i class="fa-solid fa-list-check text-green-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto flex flex-col">
+                            <h3 class="text-xl font-semibold mb-3">My To-Do List</h3>
+                            <div class="flex mb-4 gap-2">
+                                <input type="text" id="todo-input" class="flex-grow p-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Add a new task...">
+                                <button id="add-todo-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md">Add Task</button>
+                            </div>
+                            <ul id="todo-list-items" class="space-y-2 flex-grow overflow-auto">
+                                <!-- To-Do items will be added here dynamically -->
+                                <li class="flex items-center bg-gray-800 p-2 rounded-md justify-between">
+                                    <span>Sample Task 1</span>
+                                    <button class="text-red-400 hover:text-red-500 text-sm" onclick="this.parentElement.remove()">Delete</button>
+                                </li>
+                                <li class="flex items-center bg-gray-800 p-2 rounded-md justify-between">
+                                    <span>Sample Task 2 (Completed)</span>
+                                    <button class="text-red-400 hover:text-red-500 text-sm" onclick="this.parentElement.remove()">Delete</button>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                    break;
+                case 'weather':
+                    iconHTML = '<i class="fa-solid fa-cloud-sun-rain text-blue-300 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
+                            <h3 class="text-2xl font-bold mb-4">Current Weather</h3>
+                            <div class="flex items-center justify-center gap-4 text-white mb-6">
+                                <i class="fa-solid fa-cloud-sun text-6xl text-yellow-400"></i>
+                                <div>
+                                    <p class="text-5xl font-light">25°C</p>
+                                    <p class="text-lg text-gray-300">Partly Cloudy</p>
+                                </div>
+                            </div>
+                            <p class="text-xl mb-2">Location: Mount Vernon, Indiana</p>
+                            <div class="text-md text-gray-300 space-y-1">
+                                <p>Humidity: 65%</p>
+                                <p>Wind: 10 km/h NW</p>
+                                <p>Feels like: 27°C</p>
+                            </div>
+                            <button class="mt-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Fetching updated weather (conceptual)...');">
+                                Refresh Weather
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'display-settings':
+                    iconHTML = '<i class="fa-solid fa-display text-blue-400 text-lg"></i>';
+                    contentHTML = `
+                        <div class="p-4 flex-grow overflow-auto">
+                            <h3 class="text-xl font-semibold mb-4">Display Settings</h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <label for="resolution" class="block text-sm font-medium text-gray-400 mb-1">Resolution</label>
+                                    <select id="resolution" class="w-full p-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="1920x1080">1920 x 1080 (Recommended)</option>
+                                        <option value="1366x768">1366 x 768</option>
+                                        <option value="1280x720">1280 x 720</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="scale" class="block text-sm font-medium text-gray-400 mb-1">Scale (Text, apps, and other items)</label>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm text-gray-400">100%</span>
+                                        <input type="range" id="scale" min="100" max="200" value="100" step="25" class="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+                                        <span class="text-sm text-gray-400" id="scale-value">100%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="brightness" class="block text-sm font-medium text-gray-400 mb-1">Brightness</label>
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-sun text-yellow-400"></i>
+                                        <input type="range" id="brightness" min="0" max="100" value="75" class="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+                                        <i class="fa-solid fa-sun text-yellow-400"></i>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="night-light" class="text-sm font-medium text-gray-400">Night light</label>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="night-light" value="" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mt-8 text-center">
+                                <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Display settings applied (conceptual)!');">Apply</button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                default:
+                    iconHTML = '<i class="fa-solid fa-cube text-gray-400 text-lg"></i>';
+                    contentHTML = `<div class="p-4 flex-grow overflow-auto"><h1>${appName}</h1><p>Welcome to ${appName}!</p></div>`;
+            }
+
+            windowElement.innerHTML = `
+                <div class="window-header flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
+                    <div class="flex items-center gap-2">
+                        ${iconHTML}
+                        <span class="text-md font-semibold">${appName}</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="minimize-btn w-6 h-6 rounded-md hover:bg-gray-700 flex items-center justify-center text-gray-400">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <button class="maximize-restore-btn w-6 h-6 rounded-md hover:bg-gray-700 flex items-center justify-center text-gray-400">
+                            <i class="fa-regular fa-square"></i>
+                        </button>
+                        <button class="close-btn w-6 h-6 rounded-md hover:bg-red-700 flex items-center justify-center text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="window-content flex-grow overflow-hidden relative">
+                    ${contentHTML}
+                </div>
+            `;
+
+            currentWindowsContainer.appendChild(windowElement); // Use the locally retrieved windowsContainer
+            openWindows[appId] = windowElement;
+
+            // Add taskbar icon - using a dynamic image for 'about-windows'
+            const taskbarIcon = document.createElement('button');
+            taskbarIcon.id = `taskbar-icon-${appId}`;
+            taskbarIcon.className = `taskbar-app-icon flex items-center justify-center w-12 h-12 rounded-lg bg-blue-700 hover:bg-blue-600 focus:outline-none transition-colors`;
+            if (appId === 'about-windows') {
+                taskbarIcon.innerHTML = `<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-7 h-7">`;
+            } else {
+                taskbarIcon.innerHTML = iconHTML.replace('text-lg', 'text-xl'); // Use 'text-xl' for taskbar icons
+            }
+
+            const currentTaskbarApps = document.getElementById('taskbar-apps');
+            if (currentTaskbarApps) {
+                currentTaskbarApps.appendChild(taskbarIcon);
+            } else {
+                console.warn('Taskbar apps container not found, cannot add icon.');
+            }
+
+
+            makeWindowDraggableAndResizable(windowElement, appId);
+
+            // Remove opening animation class after it completes
+            windowElement.addEventListener('animationend', () => {
+                windowElement.classList.remove('opening');
+            }, { once: true });
+
+            // Manually trigger tab content display and attach listeners for "About Windows 13" if it was just opened
+            if (appId === 'about-windows') {
+                // Defer call slightly to ensure DOM elements within the newly created window are available
+                setTimeout(() => {
+                    const aboutTabBtn = windowElement.querySelector('#about-tab-btn');
+                    const updatesTabBtn = windowElement.querySelector('#updates-tab-btn');
+
+                    // Attach listeners to the tab buttons using the new function
+                    if (aboutTabBtn) aboutTabBtn.addEventListener('click', () => showAboutTabForApp(windowElement, 'about'));
+                    if (updatesTabBtn) updatesTabBtn.addEventListener('click', () => showAboutTabForApp(windowElement, 'updates'));
+
+                    // Set initial tab
+                    showAboutTabForApp(windowElement, 'about');
+                }, 50); // Small delay
+            }
+            // Initialize Calculator logic if the Calculator app was just opened
+            if (appId === 'calculator') {
+                setTimeout(() => {
+                    initializeCalculator(windowElement);
+                }, 100); // Small delay to ensure elements are rendered
+            }
+            // Initialize To-Do List logic if the To-Do List app was just opened
+            if (appId === 'todo-list') {
+                setTimeout(() => {
+                    initializeTodoList(windowElement);
+                }, 100); // Small delay to ensure elements are rendered
+            }
+            // Initialize Display Settings logic if the Display Settings app was just opened
+            if (appId === 'display-settings') {
+                setTimeout(() => {
+                    initializeDisplaySettings(windowElement);
+                }, 100); // Small delay to ensure elements are rendered
+            }
+
+        } catch (error) {
+            console.error(`Error opening app ${appName}:`, error);
+            showMessage(`Error opening ${appName}: ${error.message}`);
+        }
+    }
+
+    // --- Calculator Logic ---
+    function initializeCalculator(calculatorWindowElement) {
+        const display = calculatorWindowElement.querySelector('#calc-display');
+        const buttons = calculatorWindowElement.querySelectorAll('.calc-btn');
+        let currentInput = '0';
+        let operator = null;
+        let firstOperand = null;
+        let waitingForSecondOperand = false;
+
+        function updateDisplay() {
+            display.value = currentInput;
+        }
+
+        function clearCalculator() {
+            currentInput = '0';
+            operator = null;
+            firstOperand = null;
+            waitingForSecondOperand = false;
+            updateDisplay();
+        }
+
+        function inputDigit(digit) {
+            if (waitingForSecondOperand) {
+                currentInput = digit;
+                waitingForSecondOperand = false;
+            } else {
+                currentInput = currentInput === '0' ? digit : currentInput + digit;
+            }
+            updateDisplay();
+        }
+
+        function inputDecimal() {
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+            }
+            updateDisplay();
+        }
+
+        function handleOperator(nextOperator) {
+            const inputValue = parseFloat(currentInput);
+
+            if (operator && waitingForSecondOperand) {
+                operator = nextOperator;
+                return;
+            }
+
+            if (firstOperand === null) {
+                firstOperand = inputValue;
+            } else if (operator) {
+                const result = operate(firstOperand, inputValue, operator);
+                currentInput = String(result);
+                firstOperand = result;
+            }
+
+            waitingForSecondOperand = true;
+            operator = nextOperator;
+            updateDisplay();
+        }
+
+        function operate(num1, num2, op) {
+            switch (op) {
+                case '+': return num1 + num2;
+                case '-': return num1 - num2;
+                case '*': return num1 * num2;
+                case '/':
+                    if (num2 === 0) {
+                        showMessage('Error: Division by zero!');
+                        return 0; // Or handle as an error state
+                    }
+                    return num1 / num2;
+                default: return num2;
+            }
+        }
+
+        buttons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const { textContent } = event.target;
+
+                if (textContent === 'C') {
+                    clearCalculator();
+                    return;
+                }
+                if (textContent === '\u2190') { // Left arrow for backspace
+                    currentInput = currentInput.slice(0, -1) || '0';
+                    updateDisplay();
+                    return;
+                }
+                if (textContent === '.') {
+                    inputDecimal();
+                    return;
+                }
+                if (['+', '-', '*', '/', '='].includes(textContent)) {
+                    handleOperator(textContent);
+                    return;
+                }
+
+                inputDigit(textContent);
+            });
+        });
+
+        updateDisplay(); // Initial display update
+    }
+
+    // --- To-Do List Logic ---
+    function initializeTodoList(todoWindowElement) {
+        const todoInput = todoWindowElement.querySelector('#todo-input');
+        const addTodoBtn = todoWindowElement.querySelector('#add-todo-btn');
+        const todoListItems = todoWindowElement.querySelector('#todo-list-items');
+
+        function addTask() {
+            const taskText = todoInput.value.trim();
+            if (taskText === '') {
+                showMessage('Please enter a task!');
+                return;
+            }
+
+            const listItem = document.createElement('li');
+            listItem.className = 'flex items-center bg-gray-800 p-2 rounded-md justify-between';
+            listItem.innerHTML = `
+                <span>${taskText}</span>
+                <button class="text-red-400 hover:text-red-500 text-sm delete-todo-btn">Delete</button>
+            `;
+
+            listItem.querySelector('.delete-todo-btn').addEventListener('click', () => {
+                listItem.remove();
+            });
+
+            todoListItems.appendChild(listItem);
+            todoInput.value = ''; // Clear input
+            showMessage('Task added!');
+        }
+
+        if (addTodoBtn) {
+            addTodoBtn.addEventListener('click', addTask);
+        }
+        if (todoInput) {
+            todoInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+        }
+
+        // Re-attach listeners to pre-existing (sample) delete buttons if any
+        todoListItems.querySelectorAll('.delete-todo-btn').forEach(button => {
+            button.onclick = function() { this.parentElement.remove(); };
+        });
+    }
+
+    // --- Display Settings Logic ---
+    function initializeDisplaySettings(displaySettingsWindowElement) {
+        const scaleSlider = displaySettingsWindowElement.querySelector('#scale');
+        const scaleValueSpan = displaySettingsWindowElement.querySelector('#scale-value');
+        const brightnessSlider = displaySettingsWindowElement.querySelector('#brightness');
+        const nightLightToggle = displaySettingsWindowElement.querySelector('#night-light');
+        const desktopEnv = document.getElementById('desktop-env-container'); // Get the main desktop container
+
+        // --- Scale Slider (Conceptual) ---
+        if (scaleSlider && scaleValueSpan) {
+            scaleSlider.addEventListener('input', () => {
+                scaleValueSpan.textContent = `${scaleSlider.value}%`;
+                // For a more 'real' effect, we could scale the desktop,
+                // but it might interfere with window dragging/resizing.
+                // For now, it's a conceptual display.
+                // desktopEnv.style.transform = `scale(${parseInt(scaleSlider.value) / 100})`;
+                // desktopEnv.style.transformOrigin = 'top left';
+                showMessage(`Desktop scale set to ${scaleSlider.value}% (conceptual)`);
+            });
+        }
+
+        // --- Brightness Slider ---
+        if (brightnessSlider && desktopEnv) {
+            // Set initial brightness based on slider value
+            desktopEnv.style.setProperty('--desktop-brightness-value', `${brightnessSlider.value}%`);
+            if (!desktopEnv.classList.contains('night-light-active')) { // Apply only if night light is not active
+                 desktopEnv.style.filter = `brightness(${brightnessSlider.value}%)`;
+            }
+
+
+            brightnessSlider.addEventListener('input', () => {
+                desktopEnv.style.setProperty('--desktop-brightness-value', `${brightnessSlider.value}%`);
+                if (!desktopEnv.classList.contains('night-light-active')) { // Adjust only if night light is not active
+                    desktopEnv.style.filter = `brightness(${brightnessSlider.value}%) sepia(0.3) hue-rotate(-20deg)`;
+                } else {
+                    // If night light is active, ensure its filter combines with brightness
+                    desktopEnv.style.filter = `brightness(${brightnessSlider.value}%) sepia(0.3) hue-rotate(-20deg)`;
+                }
+            });
+        }
+
+        // --- Night Light Toggle ---
+        if (nightLightToggle && desktopEnv) {
+            // Set initial night light state
+            if (nightLightToggle.checked) {
+                desktopEnv.classList.add('night-light-active');
+            } else {
+                desktopEnv.classList.remove('night-light-active');
+                // Reset filter if night light is off, respecting brightness
+                desktopEnv.style.filter = `brightness(${brightnessSlider.value || 100}%)`;
+            }
+
+            nightLightToggle.addEventListener('change', () => {
+                if (nightLightToggle.checked) {
+                    desktopEnv.classList.add('night-light-active');
+                    // Ensure brightness is still applied when night light is on
+                    desktopEnv.style.filter = `brightness(${brightnessSlider.value || 100}%) sepia(0.3) hue-rotate(-20deg)`;
+                } else {
+                    desktopEnv.classList.remove('night-light-active');
+                    // Reset filter to just brightness when night light is off
+                    desktopEnv.style.filter = `brightness(${brightnessSlider.value || 100}%)`;
+                }
+            });
+        }
+
+        // --- Resolution Dropdown (Conceptual) ---
+        const resolutionSelect = displaySettingsWindowElement.querySelector('#resolution');
+        if (resolutionSelect) {
+            resolutionSelect.addEventListener('change', () => {
+                showMessage(`Resolution set to ${resolutionSelect.value} (conceptual)`);
+            });
+        }
+    }
+
+
+    // Initialize main desktop event listeners after the DOM is fully loaded
+    function initializeDesktopListeners() {
+        // Assign global DOM variables here, after document is loaded
+        desktopEnvContainer = document.getElementById('desktop-env-container');
+        loginScreen = document.getElementById('login-screen');
+        passwordInput = document.getElementById('password-input');
+        loginTimeDisplay = document.getElementById('login-time');
+        loginDateDisplay = document.getElementById('login-date');
+        loginSpinner = document.getElementById('login-spinner');
+        loginCard = document.querySelector('.login-card'); // Assign new variable
+        welcomeMessage = document.getElementById('welcome-message'); // Assign new variable
+
+        // desktop, windowsContainer, startMenu, startButton, taskbarApps, desktopContextMenu
+        // are now assigned after the DOM is ready.
+        desktop = document.getElementById('desktop');
+        windowsContainer = document.getElementById('windows-container');
+        startMenu = document.getElementById('start-menu');
+        startButton = document.getElementById('start-button');
+        taskbarApps = document.getElementById('taskbar-apps'); // Global assignment
+        desktopContextMenu = document.getElementById('desktop-context-menu');
+
+        // --- Attach event listeners to desktop icons dynamically ---
+        const desktopIcons = document.querySelectorAll('.desktop-icon');
+        desktopIcons.forEach(icon => {
+            const appName = icon.dataset.appName;
+            const appId = icon.dataset.appId;
+            if (appName && appId) {
+                icon.addEventListener('click', () => openApp(appName, appId));
+            } else {
+                console.warn(`Desktop icon missing data-app-name or data-app-id:`, icon);
+            }
+        });
+
+
+        // Event listeners for desktop, context menu, and start menu
+        if (desktop) {
+            desktop.addEventListener('click', hideContextMenu);
+            desktop.addEventListener('contextmenu', showContextMenu);
+        }
+        if (desktopContextMenu) {
+            desktopContextMenu.addEventListener('click', (e) => e.stopPropagation());
+        }
+        if (startMenu && startButton) { // Ensure both exist for the start menu toggle
+            document.addEventListener('click', function(event) {
+                if (!startMenu.contains(event.target) && !startButton.contains(event.target) && !startMenu.classList.contains('hidden')) {
+                    startMenu.classList.add('hidden');
+                }
+            });
+        }
+
+
+        // Centralize mouseup/mousemove listeners for all draggable/resizable elements
+        document.addEventListener('mousemove', (e) => {
+            if (document.body.style.cursor === 'grabbing' || document.body.style.cursor === 'se-resize') {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            document.body.style.cursor = 'default';
+        });
+    }
+
+
+    // --- Event listener for window load ---
+    window.addEventListener('load', () => {
+        // Initialize global variables and attach listeners after DOM is loaded
+        initializeDesktopListeners();
+
+        // Set desktop to blurred state initially when the OS loads (before login)
+        if (desktopEnvContainer) {
+            desktopEnvContainer.classList.add('blurred');
+            desktopEnvContainer.classList.remove('desktop-active'); // Ensure it's not active desktop during login
+        }
+
+        // The login screen should be visible initially.
+        if (loginScreen) {
+            loginScreen.classList.remove('hidden');
+            // Animate login card and welcome message
+            if (loginCard) loginCard.classList.add('show');
+            // Show welcome message after a short delay
+            setTimeout(() => {
+                if (welcomeMessage) welcomeMessage.classList.add('show');
+            }, 300);
+        }
+
+        updateTimeAndDate(); // Initial call to update time/date after elements are assigned
+    });
+</script>
+</body>
+</html>
