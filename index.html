@@ -279,32 +279,101 @@
             pointer-events: auto; /* Enable clicks when visible */
         }
 
-        /* Loading Spinner for Login */
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #3b82f6; /* Blue spinner */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
+        /* Windows-style Loading Spinner */
+        .windows-spinner {
+            width: 50px;
+            height: 50px;
+            position: relative;
             margin-top: 20px;
+            transform: rotate(45deg); /* Rotate the whole container to make square motion look like diamond */
             display: none; /* Hidden by default */
         }
 
-        .loading-spinner.show {
+        .windows-spinner.show {
             display: block;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .windows-spinner .dot {
+            width: 12px;
+            height: 12px;
+            background-color: #3b82f6; /* Blue dot */
+            border-radius: 50%;
+            position: absolute;
+            animation: windows-dot-spin 1.5s infinite ease-in-out;
+            opacity: 0;
         }
+
+        .windows-spinner .dot:nth-child(1) { top: 0; left: 0; animation-delay: 0s; }
+        .windows-spinner .dot:nth-child(2) { top: 0; right: 0; animation-delay: 0.1s; }
+        .windows-spinner .dot:nth-child(3) { bottom: 0; right: 0; animation-delay: 0.2s; }
+        .windows-spinner .dot:nth-child(4) { bottom: 0; left: 0; animation-delay: 0.3s; }
+
+        @keyframes windows-dot-spin {
+            0%, 100% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            25% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50%, 75% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+        }
+
 
         /* Ensure windows-container does not block clicks on desktop icons */
         #windows-container {
             position: absolute;
             inset: 0;
             pointer-events: none; /* Allow clicks to pass through to desktop icons/background initially */
+        }
+
+        /* Settings App Specific Styles */
+        .settings-sidebar {
+            width: 250px; /* Fixed width for sidebar */
+            background-color: #2a2a2a;
+            border-right: 1px solid #4a4a4a;
+            padding: 1rem;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .settings-content-area {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background-color: #1a1a1a;
+        }
+
+        .settings-category-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .settings-category-item:hover {
+            background-color: #3a3a3a;
+        }
+
+        .settings-category-item.active {
+            background-color: #005fba; /* Windows blue */
+            color: white;
+        }
+
+        .settings-category-item i {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+
+        .settings-category-item span {
+            font-weight: 500;
         }
     </style>
 </head>
@@ -329,7 +398,12 @@
             <button onclick="attemptLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg">
                 Sign In
             </button>
-            <div id="login-spinner" class="loading-spinner"></div>
+            <div id="login-spinner" class="windows-spinner">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
             <p id="login-message" class="text-red-400 mt-4 text-sm hidden"></p>
         </div>
     </div>
@@ -919,6 +993,30 @@
         }
     }
 
+    // Function to display content in the settings app based on selected category
+    function showSettingsCategory(settingsWindowElement, categoryId) {
+        // Hide all content divs
+        settingsWindowElement.querySelectorAll('.settings-content-area > div').forEach(div => {
+            div.classList.add('hidden');
+        });
+        // Remove active class from all sidebar items
+        settingsWindowElement.querySelectorAll('.settings-category-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Show the selected content div
+        const selectedContent = settingsWindowElement.querySelector(`#${categoryId}-content`);
+        if (selectedContent) {
+            selectedContent.classList.remove('hidden');
+        }
+
+        // Add active class to the selected sidebar item
+        const selectedSidebarItem = settingsWindowElement.querySelector(`[data-category-id="${categoryId}"]`);
+        if (selectedSidebarItem) {
+            selectedSidebarItem.classList.add('active');
+        }
+    }
+
     // Open Application Window
     function openApp(appName, appId) {
         try {
@@ -1047,33 +1145,120 @@
                 case 'settings':
                     iconHTML = '<i class="fa-solid fa-gear text-gray-400 text-lg"></i>';
                     contentHTML = `
-                        <div class="flex-grow p-4 overflow-auto">
-                            <h3 class="text-xl font-semibold mb-3">Settings</h3>
-                            <ul class="space-y-2">
-                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer" onclick="openApp('Display Settings', 'display-settings'); this.closest('.window').querySelector('.close-btn').click();">
-                                    <i class="fa-solid fa-display text-blue-400"></i> Display
-                                </li>
-                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
-                                    <i class="fa-solid fa-volume-high text-yellow-400"></i> Sound
-                                </li>
-                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
-                                    <i class="fa-solid fa-network-wired text-green-400"></i> Network & Internet
-                                </li>
-                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
-                                    <i class="fa-solid fa-user-circle text-purple-400"></i> Accounts
-                                </li>
-                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
-                                    <i class="fa-solid fa-sliders text-red-400"></i> Personalization
-                                </li>
-                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
-                                    <i class="fa-solid fa-wrench text-blue-400"></i> Windows Update
-                                </li>
-                                <li class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
-                                    <i class="fa-solid fa-info-circle text-gray-500"></i> About
-                                </li>
-                            </ul>
-                            <div class="mt-4 p-3 bg-gray-800 rounded-md">
-                                <p class="text-sm">This is a conceptual settings panel. Functionality is limited.</p>
+                        <div class="flex flex-row flex-grow">
+                            <div class="settings-sidebar">
+                                <h3 class="text-lg font-semibold mb-4 text-blue-400">Settings</h3>
+                                <ul class="space-y-1">
+                                    <li class="settings-category-item" data-category-id="system" onclick="showSettingsCategory(this.closest('.window'), 'system')">
+                                        <i class="fa-solid fa-desktop"></i><span>System</span>
+                                    </li>
+                                    <li class="settings-category-item" data-category-id="network" onclick="showSettingsCategory(this.closest('.window'), 'network')">
+                                        <i class="fa-solid fa-wifi"></i><span>Network & Internet</span>
+                                    </li>
+                                    <li class="settings-category-item" data-category-id="personalization" onclick="showSettingsCategory(this.closest('.window'), 'personalization')">
+                                        <i class="fa-solid fa-brush"></i><span>Personalization</span>
+                                    </li>
+                                    <li class="settings-category-item" data-category-id="accounts" onclick="showSettingsCategory(this.closest('.window'), 'accounts')">
+                                        <i class="fa-solid fa-user-circle"></i><span>Accounts</span>
+                                    </li>
+                                    <li class="settings-category-item" data-category-id="update-security" onclick="showSettingsCategory(this.closest('.window'), 'update-security')">
+                                        <i class="fa-solid fa-shield-alt"></i><span>Update & Security</span>
+                                    </li>
+                                    <li class="settings-category-item" data-category-id="about" onclick="showSettingsCategory(this.closest('.window'), 'about')">
+                                        <i class="fa-solid fa-info-circle"></i><span>About</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="settings-content-area">
+                                <!-- System Settings Content -->
+                                <div id="system-content" class="hidden">
+                                    <h4 class="text-xl font-semibold mb-4">System</h4>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-gray-300">Display Settings:</span>
+                                            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="openApp('Display Settings', 'display-settings'); this.closest('.window').querySelector('.close-btn').click();">Open</button>
+                                        </div>
+                                        <div>
+                                            <label for="sound-output" class="block text-sm font-medium text-gray-400 mb-1">Sound Output</label>
+                                            <select id="sound-output" class="w-full p-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option>Speakers (Realtek Audio)</option>
+                                                <option>Headphones</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mt-6 p-3 bg-gray-800 rounded-md">
+                                        <p class="text-sm text-gray-400">Manage display, sound, notifications, power, and battery settings.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Network & Internet Content -->
+                                <div id="network-content" class="hidden">
+                                    <h4 class="text-xl font-semibold mb-4">Network & Internet</h4>
+                                    <p class="text-gray-300 mb-4">Manage your Wi-Fi, Ethernet, VPN, and other network settings.</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-300">Wi-Fi:</span>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" value="" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Personalization Content -->
+                                <div id="personalization-content" class="hidden">
+                                    <h4 class="text-xl font-semibold mb-4">Personalization</h4>
+                                    <p class="text-gray-300 mb-4">Change your background, colors, lock screen, and themes.</p>
+                                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="showMessage('Wallpaper changed (conceptual)!');">Change Background</button>
+                                </div>
+
+                                <!-- Accounts Content -->
+                                <div id="accounts-content" class="hidden">
+                                    <h4 class="text-xl font-semibold mb-4">Accounts</h4>
+                                    <p class="text-gray-300 mb-4">Manage your user accounts, sign-in options, and family settings.</p>
+                                    <div class="flex items-center gap-4 p-3 bg-gray-800 rounded-md">
+                                        <div class="profile-pic-login w-16 h-16 text-3xl mx-0 my-0">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-lg">User Name</p>
+                                            <p class="text-sm text-gray-400">Administrator</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Update & Security Content -->
+                                <div id="update-security-content" class="hidden">
+                                    <h4 class="text-xl font-semibold mb-4">Update & Security</h4>
+                                    <p class="text-gray-300 mb-4">Windows Update, Delivery Optimization, Windows Security, Backup, Troubleshoot, Recovery.</p>
+                                    <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Checking for updates...');">Check for Updates</button>
+                                    <div class="mt-4 p-3 bg-gray-800 rounded-md">
+                                        <p class="text-sm text-gray-400">Last checked: Just now</p>
+                                        <p class="text-sm text-gray-400">Updates are available (conceptual)!</p>
+                                    </div>
+                                </div>
+
+                                <!-- About Settings Content -->
+                                <div id="about-content" class="hidden">
+                                    <h4 class="text-xl font-semibold mb-4">About</h4>
+                                    <p class="text-gray-300 mb-4">
+                                        Windows 13 Concept
+                                    </p>
+                                    <p class="text-sm text-gray-400">
+                                        Version: 0.3.73
+                                    </p>
+                                    <p class="text-sm text-gray-400">
+                                        Build: 10.0.23456.789
+                                    </p>
+                                    <p class="text-sm text-gray-400">
+                                        Processor: Conceptual Core i9-13900K
+                                    </p>
+                                    <p class="text-sm text-gray-400">
+                                        Installed RAM: 32.0 GB
+                                    </p>
+                                    <div class="mt-4 p-3 bg-gray-800 rounded-md">
+                                        <p class="text-sm text-gray-400">This is a conceptual representation of system information.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1099,6 +1284,14 @@
                             </div>
                             <div id="updates-content" class="p-4 flex-grow overflow-auto hidden">
                                 <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
+                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                                    <p class="font-bold text-lg mb-2">Version: 0.3.73</p>
+                                    <p class="text-blue-400 mb-2">Codename: Boot up sound Update & Loading Update</p>
+                                    <p class="text-gray-300">
+                                        This significant update enhances the user's initial experience by refining the boot-up sound for a more pleasing auditory feedback.
+                                        Additionally, the loading spinner throughout the system has been redesigned to align with modern Windows aesthetics, offering a smoother and more visually appealing waiting indicator.
+                                    </p>
+                                </div>
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: 0.3.4</p>
                                     <p class="text-blue-400 mb-2">Codename: Login Patch & boot up sounds</p>
@@ -1344,6 +1537,20 @@
                 setTimeout(() => {
                     initializeDisplaySettings(windowElement);
                 }, 100); // Small delay to ensure elements are rendered
+            }
+            // Initialize Settings logic if the Settings app was just opened
+            if (appId === 'settings') {
+                setTimeout(() => {
+                    // Set default category for settings
+                    showSettingsCategory(windowElement, 'system');
+
+                    // Attach event listeners to sidebar items
+                    windowElement.querySelectorAll('.settings-category-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            showSettingsCategory(windowElement, item.dataset.categoryId);
+                        });
+                    });
+                }, 100);
             }
 
         } catch (error) {
