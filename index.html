@@ -671,7 +671,7 @@
             overflow-y: auto;
             transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
             /* Added for more visual separation from content */
-            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05); /* Subtle inner shadow */
         }
 
         .settings-content-area {
@@ -689,7 +689,7 @@
             border-radius: var(--border-radius-md);
             margin-bottom: 0.4rem;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
 
         .settings-category-item:hover {
@@ -1106,6 +1106,65 @@
         }
         .snap-preview.show {
             opacity: 1;
+        }
+
+        /* Terminal specific styles (new/updated) */
+        .terminal-content {
+            background-color: rgba(0, 0, 0, 0.7); /* Slightly transparent dark background */
+            backdrop-filter: blur(8px); /* Frosted glass effect */
+            border-radius: var(--border-radius-md); /* Rounded corners for inner content */
+            padding: 1rem; /* Padding for content */
+            font-size: 0.9rem; /* Slightly larger font for readability */
+            line-height: 1.5; /* Good line spacing */
+            color: #e0e7ff; /* Lighter text color */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2); /* Inner shadow for depth */
+            /* Ensure it fills its parent and allows scrolling */
+            width: 100%;
+            height: 100%;
+            display: flex; /* Use flexbox for internal layout */
+            flex-direction: column;
+            overflow: auto; /* Enable scrolling */
+        }
+
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
+        .terminal-input-line input {
+            flex-grow: 1;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            caret-color: white; /* White cursor */
+            padding: 0;
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace; /* Add more monospace fonts */
+            font-size: 0.9rem;
+            color: #e0e7ff;
+        }
+
+        .terminal-prompt-user {
+            color: #34d399; /* Green for username */
+            font-weight: bold;
+        }
+
+        .terminal-prompt-path {
+            color: #60a5fa; /* Blue for path */
+            font-weight: bold;
+        }
+
+        /* Specific pre style for terminal output */
+        .terminal-output-pre {
+            white-space: pre-wrap; /* Wrap text within pre tags */
+            word-break: break-all;
+            margin: 0;
+            padding: 0;
+        }
+        .terminal-output-pre.text-red-400 {
+            color: #f87171;
         }
 
     </style>
@@ -2364,16 +2423,16 @@
                     break;
                 case 'terminal':
                     contentHTML = `
-                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-gray-200 rounded-b-lg">
-                             <div id="terminal-output-${appId}" class="h-full overflow-y-auto pb-8">
-                                <pre>Welcome to the Terminal!</pre>
-                                <pre>Type 'help' for commands.</pre>
-                                <pre class="mt-2">Connecting to host...</pre>
-                                <pre>Connection established.</pre>
+                        <div class="terminal-content">
+                             <div id="terminal-output-${appId}" class="flex-grow overflow-y-auto pr-2 pb-2">
+                                <pre class="terminal-output-pre">Welcome to the Terminal!</pre>
+                                <pre class="terminal-output-pre">Type 'help' for commands.</pre>
+                                <pre class="terminal-output-pre mt-2">Connecting to host...</pre>
+                                <pre class="terminal-output-pre">Connection established.</pre>
                              </div>
-                             <div class="flex items-center mt-2">
-                                <span class="text-green-400">user@computer</span>:<span id="terminal-current-path-${appId}" class="text-blue-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;
-                                <input type="text" id="terminal-input-${appId}" class="flex-grow bg-transparent text-gray-200 border-none outline-none caret-white p-0" autofocus>
+                             <div class="terminal-input-line">
+                                <span class="terminal-prompt-user">user@computer</span>:<span id="terminal-current-path-${appId}" class="terminal-prompt-path">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;
+                                <input type="text" id="terminal-input-${appId}">
                              </div>
                         </div>
                     `;
@@ -2585,7 +2644,7 @@
                     break;
                 case 'about-windows':
                     // Update bigIconHTML for specific apps if needed
-                    bigIconHTML = '<img src="/assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-20 h-20 mb-4 opacity-50">';
+                    bigIconHTML = '<img src="assets/Logo/Windows_13_logo.png" alt="Windows 13 Logo" class="w-20 h-20 mb-4 opacity-50">';
                     contentHTML = `
                         <div class="flex flex-col flex-grow relative">
                             <div class="flex border-b border-gray-700">
@@ -2786,10 +2845,9 @@
                                     <div class="relative">
                                         <input type="checkbox" id="night-light" class="sr-only peer">
                                         <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    </div>
-                                </label>
-                                <p class="text-sm text-gray-400 mt-2">Reduce blue light to help you sleep.</p>
-                            </div>
+                                    </label>
+                                    <p class="text-sm text-gray-400 mt-2">Reduce blue light to help you sleep.</p>
+                                </div>
 
                             <div class="mb-6">
                                 <label for="scale" class="block text-lg font-medium text-gray-300 mb-2">Scale and Layout</label>
@@ -3243,6 +3301,7 @@
 
         function appendOutput(text, type = 'normal') {
             const p = document.createElement('pre'); // Use pre for monospace and preserve whitespace
+            p.classList.add('terminal-output-pre'); // Add the new class
             p.innerHTML = text; // Use innerHTML for styling within pre
             if (type === 'error') p.classList.add('text-red-400');
             terminalOutput.appendChild(p);
@@ -3250,7 +3309,10 @@
         }
 
         function executeCommand(command) {
-            appendOutput(`<span class="text-green-400">user@computer</span>:<span class="text-blue-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;${command}`); // Echo the command
+            // Ensure the command echoes on a new line after the prompt
+            const promptLine = `<span class="terminal-prompt-user">user@computer</span>:<span class="terminal-prompt-path">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;`;
+            appendOutput(`${promptLine}${command}`);
+
             const parts = command.split(' ').filter(p => p !== '');
             const cmd = parts[0];
             const args = parts.slice(1);
@@ -3318,7 +3380,7 @@
         const contents = getDirectoryContents(currentPath);
         if (!contents) {
             const p = document.createElement('pre');
-            p.classList.add('text-red-400');
+            p.classList.add('terminal-output-pre', 'text-red-400');
             p.textContent = `Error: Cannot access '${currentPath}'`;
             outputElement.appendChild(p);
             return;
@@ -3326,6 +3388,7 @@
 
         if (Object.keys(contents).length === 0) {
             const p = document.createElement('pre');
+            p.classList.add('terminal-output-pre');
             p.textContent = `Directory '${currentPath}' is empty.`;
             outputElement.appendChild(p);
             return;
@@ -3342,6 +3405,7 @@
                     formattedItem = `<span class="text-gray-300"><i class="fa-solid fa-file mr-2"></i>${item}</span>`;
                 }
                 const p = document.createElement('pre');
+                p.classList.add('terminal-output-pre'); // Add the new class
                 p.innerHTML = formattedItem;
                 outputElement.appendChild(p);
             } else {
@@ -3357,7 +3421,10 @@
 
     function changeDirectory(dir, outputElement, callback) {
         if (!dir) {
-            showMessage('Usage: cd <directory>');
+            const p = document.createElement('pre');
+            p.classList.add('terminal-output-pre');
+            p.textContent = 'Usage: cd <directory>';
+            outputElement.appendChild(p);
             return;
         }
 
@@ -3374,7 +3441,10 @@
             if (absoluteParts[0].toLowerCase() === 'c:') {
                 newPathParts = absoluteParts;
             } else {
-                appendOutput(`Invalid path: ${dir}`, 'error');
+                const p = document.createElement('pre');
+                p.classList.add('terminal-output-pre', 'text-red-400');
+                p.textContent = `Invalid path: ${dir}`;
+                outputElement.appendChild(p);
                 return;
             }
         } else { // Relative path
@@ -3388,7 +3458,10 @@
             window.currentPath = testPath + (testPath.endsWith(':') ? '\\' : ''); // Ensure trailing slash for drives
             if (callback) callback(); // Call the callback to update the prompt
         } else {
-            appendOutput(`Directory not found: '${dir}'`, 'error');
+            const p = document.createElement('pre');
+            p.classList.add('terminal-output-pre', 'text-red-400');
+            p.textContent = `Directory not found: '${dir}'`;
+            outputElement.appendChild(p);
         }
     }
 
