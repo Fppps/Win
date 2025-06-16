@@ -150,13 +150,26 @@
          * Applies the specified theme ('dark-mode' or 'light-mode') to the body.
          * Updates the theme toggle in display settings if it exists.
          * @param {string} theme - The theme to apply.
+         * @param {boolean} animate - Whether to apply an animation during theme change.
          */
-        function applyTheme(theme) {
+        function applyTheme(theme, animate = false) {
             if (document.body) {
                 if (theme === 'light-mode') {
                     document.body.classList.add('light-mode');
+                    if (animate) {
+                        document.body.classList.add('animate-light');
+                        setTimeout(() => {
+                            document.body.classList.remove('animate-light');
+                        }, 800); // Match animation duration
+                    }
                 } else {
                     document.body.classList.remove('light-mode');
+                    if (animate) {
+                        document.body.classList.add('animate-dark');
+                        setTimeout(() => {
+                            document.body.classList.remove('animate-dark');
+                        }, 800); // Match animation duration
+                    }
                 }
             }
             // Update the toggle state if it exists (it's inside the display settings window)
@@ -1165,6 +1178,30 @@
         }
         .terminal-output-pre.text-red-400 {
             color: #f87171;
+        }
+
+        /* Light mode activation glow */
+        @keyframes light-up-glow {
+            0% { box-shadow: 0 0 0px 0px rgba(255, 255, 255, 0.4); }
+            50% { box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.6); }
+            100% { box-shadow: 0 0 0px 0px rgba(255, 255, 255, 0); }
+        }
+
+        /* Dark mode activation spark */
+        @keyframes dark-spark-glow {
+            0% { box-shadow: 0 0 0px 0px rgba(0, 0, 0, 0.4), 0 0 0px 0px rgba(100, 100, 255, 0); }
+            25% { box-shadow: 0 0 30px 15px rgba(0, 0, 0, 0.8), 0 0 10px 5px rgba(100, 100, 255, 0.5); }
+            50% { box-shadow: 0 0 0px 0px rgba(0, 0, 0, 0), 0 0 0px 0px rgba(100, 100, 255, 0); }
+            100% { box-shadow: 0 0 0px 0px rgba(0, 0, 0, 0), 0 0 0px 0px rgba(100, 100, 255, 0); }
+        }
+
+        /* Classes to trigger animations */
+        body.light-mode.animate-light {
+            animation: light-up-glow 0.8s ease-out forwards;
+        }
+
+        body:not(.light-mode).animate-dark {
+            animation: dark-spark-glow 0.8s ease-out forwards;
         }
 
     </style>
@@ -2832,41 +2869,7 @@
                                         <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                                     </label>
                                 </div>
-
-                            <div class="mb-6">
-                                <label for="brightness" class="block text-lg font-medium text-gray-300 mb-2">Brightness</label>
-                                <input type="range" id="brightness" min="20" max="100" value="100" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                                <span class="text-sm text-gray-400 mt-2">Adjust screen brightness.</span>
                             </div>
-
-                            <div class="mb-6">
-                                <label for="night-light" class="flex items-center cursor-pointer">
-                                    <span class="text-gray-300 mr-3">Night Light</span>
-                                    <div class="relative">
-                                        <input type="checkbox" id="night-light" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    </label>
-                                    <p class="text-sm text-gray-400 mt-2">Reduce blue light to help you sleep.</p>
-                                </div>
-
-                            <div class="mb-6">
-                                <label for="scale" class="block text-lg font-medium text-gray-300 mb-2">Scale and Layout</label>
-                                <input type="range" id="scale" min="100" max="200" value="100" step="25" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                                <p class="text-sm text-gray-400 mt-1">Recommended: <span id="scale-value">100%</span></p>
-                            </div>
-
-                            <div class="mb-6">
-                                <label for="resolution" class="block text-lg font-medium text-gray-300 mb-2">Display Resolution</label>
-                                <select id="resolution" class="w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option>1920 x 1080 (Recommended)</option>
-                                    <option>1600 x 900</option>
-                                    <option>1366 x 768</option>
-                                    <option>1280 x 720</option>
-                                </select>
-                            </div>
-
-                            <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="saveUserPreferences()">Apply Display Settings</button>
-                        </div>
                     `;
                     break;
                 case 'recycle-bin':
@@ -3139,58 +3142,8 @@
 
     // --- Display Settings Logic ---
     function initializeDisplaySettings(displaySettingsWindowElement) {
-        const scaleSlider = displaySettingsWindowElement.querySelector('#scale');
-        const scaleValueSpan = displaySettingsWindowElement.querySelector('#scale-value');
-        const brightnessSlider = displaySettingsWindowElement.querySelector('#brightness');
-        const nightLightToggle = displaySettingsWindowElement.querySelector('#night-light');
-        const themeModeToggle = displaySettingsWindowElement.querySelector('#theme-mode'); // Get themeModeToggle inside the function
-
-        const desktopEnv = document.getElementById('desktop-env-container'); // Get the main desktop container
-
-        // --- Scale Slider (Conceptual) ---
-        if (scaleSlider && scaleValueSpan) {
-            scaleSlider.addEventListener('input', () => {
-                scaleValueSpan.textContent = `${scaleSlider.value}%`;
-                // No actual scaling applied, just UI feedback
-                showMessage(`Desktop scale set to ${scaleSlider.value}% (conceptual)`);
-            });
-            // Set initial value display
-            scaleValueSpan.textContent = `${scaleSlider.value}%`;
-        }
-
-        // --- Brightness Slider ---
-        if (brightnessSlider && desktopEnv) {
-            // Get initial brightness from computed style or default
-            let currentBrightness = parseFloat(getComputedStyle(desktopEnv).filter.match(/brightness\((\d+(\.\d+)?)%\)/)?.[1]) || 100;
-            brightnessSlider.value = currentBrightness;
-
-            brightnessSlider.addEventListener('input', () => {
-                refreshDesktopAppearance(); // Re-calculate and apply all filters
-            });
-        }
-
-        // --- Night Light Toggle ---
-        if (nightLightToggle && desktopEnv) {
-            // Set initial night light state based on its class
-            nightLightToggle.checked = desktopEnv.classList.contains('night-light-active');
-
-            nightLightToggle.addEventListener('change', () => {
-                if (nightLightToggle.checked) {
-                    desktopEnv.classList.add('night-light-active');
-                } else {
-                    desktopEnv.classList.remove('night-light-active');
-                }
-                refreshDesktopAppearance(); // Re-calculate and apply all filters
-            });
-        }
-
-        // --- Resolution Dropdown (Conceptual) ---
-        const resolutionSelect = displaySettingsWindowElement.querySelector('#resolution');
-        if (resolutionSelect) {
-            resolutionSelect.addEventListener('change', () => {
-                showMessage(`Resolution set to ${resolutionSelect.value} (conceptual)`);
-            });
-        }
+        // Removed brightness, scale, night light, resolution as per request
+        const themeModeToggle = displaySettingsWindowElement.querySelector('#theme-mode');
 
         // --- Theme Mode Toggle (Light/Dark) ---
         if (themeModeToggle) {
@@ -3203,7 +3156,7 @@
                 } else {
                     window.userPreferences.theme = 'dark-mode';
                 }
-                applyTheme(window.userPreferences.theme); // This will now trigger refreshDesktopAppearance
+                applyTheme(window.userPreferences.theme, true); // Pass true to animate
                 saveUserPreferences(); // This will persist to localStorage
             });
         }
@@ -3325,6 +3278,7 @@
                     appendOutput('  <span class="text-yellow-400">echo &lt;message&gt;</span> - print message');
                     appendOutput('  <span class="text-yellow-400">clear</span> - clear the terminal screen');
                     appendOutput('  <span class="text-yellow-400">pwd</span> - print working directory');
+                    appendOutput('  <span class="text-yellow-400">win13 -[folder_name] --[installer_name]</span> - install Win13 software');
                     break;
                 case 'ls':
                     listDirectory(terminalOutput, window.currentPath, true); // Pass true to enable rich formatting
@@ -3340,6 +3294,23 @@
                     break;
                 case 'pwd':
                     appendOutput(window.currentPath);
+                    break;
+                case 'win13':
+                    if (args.length === 2 && args[0].startsWith('-') && args[1].startsWith('--')) {
+                        const folderName = args[0].substring(1); // Remove '-'
+                        const installerName = args[1].substring(2); // Remove '--'
+                        appendOutput(`Initializing Win13 installer for '${installerName}' in folder '${folderName}'...`);
+                        appendOutput(`Downloading components for ${installerName}...`);
+                        // Simulate progress
+                        setTimeout(() => {
+                            appendOutput(`Extracting files to C:\\Program Files\\${folderName}\\${installerName}...`);
+                            setTimeout(() => {
+                                appendOutput(`Installation of '${installerName}' complete!`);
+                            }, 1500);
+                        }, 1000);
+                    } else {
+                        appendOutput('Usage: win13 -<folder_name> --<installer_name>', 'error');
+                    }
                     break;
                 case '': // Empty command
                     break;
