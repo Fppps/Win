@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 13 Concept</title>
+    <title>Windows 13 Concept (0.4.1)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts for custom typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
@@ -50,7 +50,15 @@
                         }
                     }
                 },
-                'Program Files': {},
+                'Program Files': {
+                    'Applications': {
+                        'Red Sun': 'The Red Sun application. A symbolic app.',
+                        'Blue Sun': 'The Blue Sun application. A symbolic app.'
+                    },
+                    'SystemTools': {
+                        'UpdateTool': 'System Update Tool files.'
+                    }
+                },
                 'Windows': {}
             }
         };
@@ -653,20 +661,22 @@
             pointer-events: none;
         }
 
-        /* Settings App Specific Styles */
+        /* Settings App Specific Styles (Windows 11-like, but refined) */
         .settings-sidebar {
-            width: 250px;
+            width: 280px; /* Wider sidebar */
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--sidebar-border);
             padding: 1rem;
             flex-shrink: 0;
             overflow-y: auto;
             transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
+            /* Added for more visual separation from content */
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
         }
 
         .settings-content-area {
             flex-grow: 1;
-            padding: 1.5rem; /* More padding */
+            padding: 2rem; /* More padding */
             overflow-y: auto;
             background-color: var(--content-area-bg);
             transition: background-color 0.3s ease-out;
@@ -675,26 +685,27 @@
         .settings-category-item {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
+            padding: 0.85rem 1.25rem; /* Larger clickable area */
             border-radius: var(--border-radius-md);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
 
         .settings-category-item:hover {
-            background-color: var(--start-menu-item-hover); /* Reusing start menu item hover for consistency */
+            background-color: rgba(59, 130, 246, 0.2); /* A slightly brighter blue on hover */
         }
 
         .settings-category-item.active {
-            background-color: #005fba; /* Windows blue */
-            color: white;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+            background-color: rgba(59, 130, 246, 0.3); /* Lighter blue for active state */
+            color: white; /* Keep text white */
+            /* Add a distinct left border/shadow for active state */
+            box-shadow: inset 4px 0 0 var(--general-button-bg); /* Use primary blue for indicator */
         }
 
         .settings-category-item i {
-            margin-right: 0.75rem;
-            font-size: 1.25rem;
+            margin-right: 1rem; /* More space for icon */
+            font-size: 1.35rem; /* Slightly larger icon */
         }
 
         .settings-category-item span {
@@ -962,11 +973,15 @@
         }
 
         /* Settings category item active state */
-        .settings-category-item.active {
-            background-color: #005fba; /* Consistent blue */
-            color: white;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        body.light-mode .settings-category-item.active {
+            background-color: rgba(96, 165, 250, 0.3); /* Lighter blue for light mode active state */
+            color: var(--window-text); /* Adapt text color */
+            box-shadow: inset 4px 0 0 var(--general-button-bg);
         }
+        body.light-mode .settings-category-item:hover {
+            background-color: rgba(96, 165, 250, 0.15); /* Lighter blue hover for light mode */
+        }
+
 
         /* Beta Intro Modal */
         #beta-intro-modal {
@@ -1273,7 +1288,15 @@
             <!-- Middle Panel: Updates -->
             <div class="w-1/3 border-r border-gray-700 px-4 overflow-y-auto">
                 <h2 class="text-lg font-semibold mb-4 text-blue-400">Windows 13 Updates</h2>
-                <!-- UPDATED V0.4.0 (Official) ENTRY START -->
+                <!-- NEW UPDATE ENTRY START -->
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-bold text-lg mb-2">Version: 0.4.1</p>
+                    <p class="text-blue-400 mb-2">Key Changes: Terminal & Settings Redesigned</p>
+                    <p class="text-gray-300 text-sm">
+                        This update focuses on user interface refinements. The Terminal has been completely redesigned for a more modern and functional command-line experience. Additionally, the Settings application has been remade to align with contemporary Windows design principles, offering a more intuitive and visually appealing user experience.
+                    </p>
+                </div>
+                <!-- NEW UPDATE ENTRY END -->
                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                     <p class="font-bold text-lg mb-2">Version: V0.4.0 (Official)</p>
                     <p class="text-blue-400 mb-2">Codename: Stability & Feature Parity</p>
@@ -1285,7 +1308,6 @@
                         into a production-ready state, ensuring reliability and a polished feel.
                     </p>
                 </div>
-                <!-- UPDATED V0.4.0 (Official) ENTRY END -->
                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                     <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
                     <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
@@ -1395,12 +1417,10 @@
     <!-- Beta Intro Modal -->
     <div id="beta-intro-modal" class="hidden">
         <div class="beta-intro-card">
-            <h2 class="text-3xl font-bold mb-4 text-blue-400">Welcome to Windows 13 (V0.4.0 BETA)</h2>
-            <h3 class="text-xl font-semibold mb-3">Codename: New functions and alignment fixes</h3>
+            <h2 class="text-3xl font-bold mb-4 text-blue-400">Welcome to Windows 13 (0.4.1)</h2>
+            <h3 class="text-xl font-semibold mb-3">Key Changes: Terminal & Settings Redesigned</h3>
             <p class="text-gray-300 mb-6">
-                This beta release brings significant improvements including persistent user settings via local storage,
-                enhanced login and account creation, a more interactive File Explorer, functional Terminal commands,
-                and refined window resizing behavior for a smoother user experience. Explore the new features!
+                This update focuses on user interface refinements. The Terminal has been completely redesigned for a more modern and functional command-line experience. Additionally, the Settings application has been remade to align with contemporary Windows design principles, offering a more intuitive and visually appealing user experience.
             </p>
             <button onclick="hideBetaIntro()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">
                 Got It!
@@ -2162,24 +2182,34 @@
         // Hide all content areas within the settings app
         parentWindow.querySelectorAll('.settings-content-area > div').forEach(div => {
             div.classList.add('hidden');
+            div.classList.remove('animate-fade-in'); // Remove animation class if present
         });
         // Deactivate all sidebar items
         parentWindow.querySelectorAll('.settings-category-item').forEach(item => {
-            item.classList.remove('active', 'bg-blue-600', 'hover:bg-blue-700', 'text-white');
-            item.classList.add('bg-transparent', 'hover:bg-gray-700');
+            item.classList.remove('active');
+            // Re-apply original hover states if they were overridden by active state
+            item.classList.add('hover:bg-[rgba(59,130,246,0.2)]');
         });
 
         // Show the selected content area
         const targetContent = parentWindow.querySelector(`#${categoryId}-content`);
         if (targetContent) {
             targetContent.classList.remove('hidden');
+            // Optional: Add a fade-in animation for content change
+            anime({
+                targets: targetContent,
+                opacity: [0, 1],
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
         }
 
         // Activate the clicked sidebar item
         const clickedItem = parentWindow.querySelector(`.settings-category-item[data-category-id="${categoryId}"]`);
         if (clickedItem) {
-            clickedItem.classList.add('active', 'bg-blue-600', 'text-white');
-            clickedItem.classList.remove('bg-transparent', 'hover:bg-gray-700');
+            clickedItem.classList.add('active');
+            // Remove hover class from the active item as it's now visually active
+            clickedItem.classList.remove('hover:bg-[rgba(59,130,246,0.2)]');
         }
 
          // Special handling for personalization to ensure wallpaper preview and inputs are updated
@@ -2334,13 +2364,16 @@
                     break;
                 case 'terminal':
                     contentHTML = `
-                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-green-300 rounded-b-lg">
+                        <div class="p-4 flex-grow font-mono text-sm overflow-auto bg-black text-gray-200 rounded-b-lg">
                              <div id="terminal-output-${appId}" class="h-full overflow-y-auto pb-8">
-                                <pre><span class="text-blue-400">user@Glinux</span>:<span class="text-purple-400">${window.currentPath.replace(/\\/g, '/')}</span>$ Welcome to Glinux Terminal! Type 'help' for commands.</pre>
+                                <pre>Welcome to the Terminal!</pre>
+                                <pre>Type 'help' for commands.</pre>
+                                <pre class="mt-2">Connecting to host...</pre>
+                                <pre>Connection established.</pre>
                              </div>
                              <div class="flex items-center mt-2">
-                                <span class="text-blue-400">user@Glinux</span>:<span class="text-purple-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;
-                                <input type="text" id="terminal-input-${appId}" class="flex-grow bg-transparent text-green-300 border-none outline-none caret-green-300 p-0" autofocus>
+                                <span class="text-green-400">user@computer</span>:<span id="terminal-current-path-${appId}" class="text-blue-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;
+                                <input type="text" id="terminal-input-${appId}" class="flex-grow bg-transparent text-gray-200 border-none outline-none caret-white p-0" autofocus>
                              </div>
                         </div>
                     `;
@@ -2369,7 +2402,7 @@
                     contentHTML = `
                         <div class="flex flex-row flex-grow">
                             <div class="settings-sidebar">
-                                <h3 class="text-lg font-semibold mb-4 text-blue-400">Settings</h3>
+                                <h3 class="text-xl font-semibold mb-6 text-gray-100">Settings</h3>
                                 <ul class="space-y-1">
                                     <li class="settings-category-item" data-category-id="system" onclick="showSettingsCategory(this.closest('.window'), 'system')">
                                         <i class="fa-solid fa-desktop"></i><span>System</span>
@@ -2394,67 +2427,82 @@
                             <div class="settings-content-area">
                                 <!-- System Settings Content -->
                                 <div id="system-content" class="hidden">
-                                    <h4 class="text-xl font-semibold mb-4">System</h4>
-                                    <div class="space-y-4">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-gray-300">Display Settings:</span>
-                                            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="openApp('Display Settings', 'display-settings'); this.closest('.window').querySelector('.close-btn').click();">Open</button>
+                                    <h4 class="text-2xl font-semibold mb-6">System</h4>
+                                    <div class="space-y-6">
+                                        <div class="bg-gray-800 p-4 rounded-lg flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium text-lg mb-1">Display</p>
+                                                <p class="text-sm text-gray-400">Manage your connected displays and display settings.</p>
+                                            </div>
+                                            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="openApp('Display Settings', 'display-settings'); this.closest('.window').querySelector('.close-btn').click();">Open Display Settings</button>
                                         </div>
-                                        <div>
-                                            <label for="sound-output" class="block text-sm font-medium text-gray-400 mb-1">Sound Output</label>
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <p class="font-medium text-lg mb-2">Sound Output</p>
                                             <select id="sound-output" class="w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                                 <option>Speakers (Realtek Audio)</option>
                                                 <option>Headphones</option>
                                             </select>
+                                            <p class="text-sm text-gray-400 mt-2">Choose your output device and adjust volume.</p>
                                         </div>
-                                    </div>
-                                    <div class="mt-6 p-3 bg-gray-800 rounded-md">
-                                        <p class="text-sm text-gray-400">Manage display, sound, notifications, power, and battery settings.</p>
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <p class="font-medium text-lg mb-2">Notifications & actions</p>
+                                            <p class="text-sm text-gray-400">Manage notifications from apps and other senders.</p>
+                                            <button class="mt-3 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md">Notification settings</button>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Network & Internet Content -->
                                 <div id="network-content" class="hidden">
-                                    <h4 class="text-xl font-semibold mb-4">Network & Internet</h4>
-                                    <p class="text-gray-300 mb-4">Manage your Wi-Fi, Ethernet, VPN, and other network settings.</p>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-gray-300">Wi-Fi:</span>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" value="" class="sr-only peer" checked>
-                                            <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                        </label>
+                                    <h4 class="text-2xl font-semibold mb-6">Network & Internet</h4>
+                                    <div class="space-y-6">
+                                        <div class="bg-gray-800 p-4 rounded-lg flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium text-lg mb-1">Wi-Fi</p>
+                                                <p class="text-sm text-gray-400">Connect to, manage, or disconnect from Wi-Fi networks.</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" value="" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                            </label>
+                                        </div>
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <p class="font-medium text-lg mb-2">Ethernet</p>
+                                            <p class="text-sm text-gray-400">View your network properties for wired connections.</p>
+                                            <button class="mt-3 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md">View network properties</button>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Personalization Content -->
                                 <div id="personalization-content" class="hidden">
-                                    <h4 class="text-xl font-semibold mb-4">Personalization</h4>
-                                    <p class="text-gray-300 mb-4">Change your background, colors, lock screen, and themes.</p>
-                                    <div class="flex flex-col gap-4">
-                                        <h5 class="font-semibold text-gray-200">Desktop Background</h5>
-                                        <div id="current-wallpaper-preview" class="w-full h-32 bg-gray-700 rounded-lg bg-cover bg-center mb-2" style="background-image: var(--desktop-image);"></div>
-                                        <p class="text-sm text-gray-400 mb-2">Choose from predefined or enter a custom URL.</p>
+                                    <h4 class="text-2xl font-semibold mb-6">Personalization</h4>
+                                    <div class="space-y-6">
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <h5 class="font-medium text-lg mb-3">Desktop Background</h5>
+                                            <div id="current-wallpaper-preview" class="w-full h-32 bg-gray-700 rounded-lg bg-cover bg-center mb-4" style="background-image: var(--desktop-image);"></div>
+                                            <p class="text-sm text-gray-400 mb-3">Choose from predefined or enter a custom URL.</p>
 
-                                        <div class="grid grid-cols-2 gap-2 mb-4">
-                                            <img src="Assets/Background/BackgroundV2.png" alt="Default Wallpaper" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('Assets/Background/BackgroundV2.png', this)">
-                                            <img src="https://placehold.co/400x240/007bff/ffffff?text=Blue+Gradient" alt="Blue Gradient" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/007bff/ffffff?text=Blue+Gradient', this)">
-                                            <img src="https://placehold.co/400x240/28a745/ffffff?text=Green+Pattern" alt="Green Pattern" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/28a745/ffffff?text=Green+Pattern', this)">
-                                            <img src="https://placehold.co/400x240/6f42c1/ffffff?text=Purple+Abstract" alt="Purple Abstract" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/6f42c1/ffffff?text=Purple+Abstract', this)">
+                                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                                <img src="Assets/Background/BackgroundV2.png" alt="Default Wallpaper" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('Assets/Background/BackgroundV2.png', this)">
+                                                <img src="https://placehold.co/400x240/007bff/ffffff?text=Blue+Gradient" alt="Blue Gradient" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/007bff/ffffff?text=Blue+Gradient', this)">
+                                                <img src="https://placehold.co/400x240/28a745/ffffff?text=Green+Pattern" alt="Green Pattern" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/28a745/ffffff?text=Green+Pattern', this)">
+                                                <img src="https://placehold.co/400x240/6f42c1/ffffff?text=Purple+Abstract" alt="Purple Abstract" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="selectWallpaper('https://placehold.co/400x240/6f42c1/ffffff?text=Purple+Abstract', this)">
+                                            </div>
+
+                                            <label for="wallpaper-url-input" class="block text-sm font-medium text-gray-400 mb-2">Custom Wallpaper URL</label>
+                                            <input type="text" id="wallpaper-url-input" class="w-full mb-3" placeholder="Enter image URL">
+                                            <button class="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="applyCustomWallpaper()">Apply Custom Wallpaper</button>
+                                            <button class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="saveUserPreferences()">Save Wallpaper</button>
                                         </div>
-
-                                        <label for="wallpaper-url-input" class="block text-sm font-medium text-gray-400 mb-1">Custom Wallpaper URL</label>
-                                        <input type="text" id="wallpaper-url-input" class="w-full" placeholder="Enter image URL">
-                                        <button class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md" onclick="applyCustomWallpaper()">Apply Custom Wallpaper</button>
-                                        <button class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="saveUserPreferences()">Save Wallpaper</button>
                                     </div>
                                 </div>
 
                                 <!-- Accounts Content -->
                                 <div id="accounts-content" class="hidden">
-                                    <h4 class="text-xl font-semibold mb-4">Accounts</h4>
-                                    <p class="text-gray-300 mb-4">Manage your user accounts and sign-in options.</p>
-                                    <div class="flex flex-col gap-4">
-                                        <div class="flex items-center gap-4 p-3 bg-gray-800 rounded-md">
+                                    <h4 class="text-2xl font-semibold mb-6">Accounts</h4>
+                                    <div class="space-y-6">
+                                        <div class="bg-gray-800 p-4 rounded-lg flex items-center gap-4">
                                             <div class="profile-pic-login w-16 h-16 text-3xl mx-0 my-0">
                                                 <i class="fa-solid fa-user"></i>
                                             </div>
@@ -2463,13 +2511,13 @@
                                                 <p class="text-sm text-gray-400">Administrator</p>
                                             </div>
                                         </div>
-                                        <div>
-                                            <label for="accounts-username-input" class="block text-sm font-medium text-gray-400 mb-1">Change Username</label>
-                                            <input type="text" id="accounts-username-input" class="w-full" placeholder="New Username" value="${window.userPreferences.username}">
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <label for="accounts-username-input" class="block text-sm font-medium text-gray-400 mb-2">Change Username</label>
+                                            <input type="text" id="accounts-username-input" class="w-full mb-3" placeholder="New Username" value="${window.userPreferences.username}">
                                         </div>
-                                        <div>
-                                            <label for="accounts-password-input" class="block text-sm font-medium text-gray-400 mb-1">Change Password</label>
-                                            <input type="password" id="accounts-password-input" class="w-full" placeholder="New Password (for demo only)" value="${window.userPreferences.password}">
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <label for="accounts-password-input" class="block text-sm font-medium text-gray-400 mb-2">Change Password</label>
+                                            <input type="password" id="accounts-password-input" class="w-full mb-1" placeholder="New Password (for demo only)" value="${window.userPreferences.password}">
                                             <p class="text-xs text-red-400 mt-1">Warning: In a real application, passwords should be hashed and never stored directly.</p>
                                         </div>
                                         <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="updateAccountDetails()">Save Account Changes</button>
@@ -2478,35 +2526,57 @@
 
                                 <!-- Update & Security Content -->
                                 <div id="update-security-content" class="hidden">
-                                    <h4 class="text-xl font-semibold mb-4">Update & Security</h4>
-                                    <p class="text-gray-300 mb-4">Windows Update, Delivery Optimization, Windows Security, Backup, Troubleshoot, Recovery.</p>
-                                    <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Checking for updates...');">Check for Updates</button>
-                                    <div class="mt-4 p-3 bg-gray-800 rounded-md">
-                                        <p class="text-sm text-gray-400">Last checked: Just now</p>
-                                        <p class="text-sm text-gray-400">Updates are available (conceptual)!</p>
+                                    <h4 class="text-2xl font-semibold mb-6">Update & Security</h4>
+                                    <div class="space-y-6">
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <p class="font-medium text-lg mb-2">Windows Update</p>
+                                            <p class="text-sm text-gray-400">Check for and manage updates to Windows.</p>
+                                            <button class="mt-3 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg" onclick="showMessage('Checking for updates...');">Check for Updates</button>
+                                            <p class="text-sm text-gray-400 mt-3">Last checked: Just now</p>
+                                            <p class="text-sm text-gray-400">Updates are available (conceptual)!</p>
+                                        </div>
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <p class="font-medium text-lg mb-2">Windows Security</p>
+                                            <p class="text-sm text-gray-400">Manage virus & threat protection, firewall, and account protection.</p>
+                                            <button class="mt-3 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-md">Open Windows Security</button>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- About Settings Content -->
                                 <div id="about-content" class="hidden">
-                                    <h4 class="text-xl font-semibold mb-4">About</h4>
-                                    <p class="text-gray-300 mb-4">
-                                        Windows 13 Concept
-                                    </p>
-                                    <p class="text-sm text-gray-400">
-                                        Version: 0.3.73
-                                    </p>
-                                    <p class="text-sm text-gray-400">
-                                        Build: 10.0.23456.789
-                                    </p>
-                                    <p class="text-sm text-gray-400">
-                                        Processor: Conceptual Core i9-13900K
-                                    </p>
-                                    <p class="text-sm text-gray-400">
-                                        Installed RAM: 32.0 GB
-                                    </p>
-                                    <div class="mt-4 p-3 bg-gray-800 rounded-md">
-                                        <p class="text-sm text-gray-400">This is a conceptual representation of system information.</p>
+                                    <h4 class="text-2xl font-semibold mb-6">About</h4>
+                                    <div class="space-y-4">
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <p class="font-medium text-lg mb-2">Device specifications</p>
+                                            <p class="text-gray-300">
+                                                Windows 13 Concept
+                                            </p>
+                                            <p class="text-sm text-gray-400">
+                                                Version: 0.4.1
+                                            </p>
+                                            <p class="text-sm text-gray-400">
+                                                Build: 10.0.23456.800
+                                            </p>
+                                            <p class="text-sm text-gray-400">
+                                                Processor: Conceptual Core i9-13900K
+                                            </p>
+                                            <p class="text-sm text-gray-400">
+                                                Installed RAM: 32.0 GB
+                                            </p>
+                                        </div>
+                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                            <p class="font-medium text-lg mb-2">Windows specifications</p>
+                                            <p class="text-gray-300">
+                                                Edition: Windows 13 Home (Concept)
+                                            </p>
+                                            <p class="text-sm text-gray-400">
+                                                Version: 23H2 (Conceptual)
+                                            </p>
+                                            <p class="text-sm text-gray-400">
+                                                Installed on: 6/15/2025
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2537,7 +2607,15 @@
                             <div id="updates-content" class="p-4 flex-grow overflow-auto hidden flex flex-col items-center justify-center text-center">
                                 ${bigIconHTML}
                                 <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
-                                <!-- UPDATED V0.4.0 (Official) ENTRY START -->
+                                <!-- NEW UPDATE ENTRY START -->
+                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                                    <p class="font-bold text-lg mb-2">Version: 0.4.1</p>
+                                    <p class="text-blue-400 mb-2">Key Changes: Terminal & Settings Redesigned</p>
+                                    <p class="text-gray-300">
+                                        This update focuses on user interface refinements. The Terminal has been completely redesigned for a more modern and functional command-line experience. Additionally, the Settings application has been remade to align with contemporary Windows design principles, offering a more intuitive and visually appealing user experience.
+                                    </p>
+                                </div>
+                                <!-- NEW UPDATE ENTRY END -->
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: V0.4.0 (Official)</p>
                                     <p class="text-blue-400 mb-2">Codename: Stability & Feature Parity</p>
@@ -2549,7 +2627,6 @@
                                         into a production-ready state, ensuring reliability and a polished feel.
                                     </p>
                                 </div>
-                                <!-- UPDATED V0.4.0 (Official) ENTRY END -->
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
                                     <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
@@ -2603,7 +2680,6 @@
                                         a conceptual Windows Update setting for future expansion.
                                     </p>
                                 </div>
-                                <p class="text-gray-500 text-sm mt-4">Check back for more exciting updates!</p>
                             </div>
                         </div>
                     `;
@@ -2695,9 +2771,8 @@
                                     <div class="relative">
                                         <input type="checkbox" id="theme-mode" class="sr-only peer">
                                         <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    </div>
-                                </label>
-                            </div>
+                                    </label>
+                                </div>
 
                             <div class="mb-6">
                                 <label for="brightness" class="block text-lg font-medium text-gray-300 mb-2">Brightness</label>
@@ -3157,17 +3232,25 @@
     function initializeTerminal(terminalWindowElement) {
         const terminalOutput = terminalWindowElement.querySelector(`#terminal-output-${terminalWindowElement.id.replace('window-', '')}`);
         const terminalInput = terminalWindowElement.querySelector(`#terminal-input-${terminalWindowElement.id.replace('window-', '')}`);
+        const terminalPathDisplay = terminalWindowElement.querySelector(`#terminal-current-path-${terminalWindowElement.id.replace('window-', '')}`);
+
+        // Update the path displayed in the prompt
+        function updateTerminalPrompt() {
+            if (terminalPathDisplay) {
+                terminalPathDisplay.textContent = window.currentPath.replace(/\\/g, '/');
+            }
+        }
 
         function appendOutput(text, type = 'normal') {
             const p = document.createElement('pre'); // Use pre for monospace and preserve whitespace
-            p.textContent = text;
+            p.innerHTML = text; // Use innerHTML for styling within pre
             if (type === 'error') p.classList.add('text-red-400');
             terminalOutput.appendChild(p);
             terminalOutput.scrollTop = terminalOutput.scrollHeight; // Scroll to bottom
         }
 
         function executeCommand(command) {
-            appendOutput(`user@Glinux:${window.currentPath.replace(/\\/g, '/')}$ ${command}`); // Echo the command
+            appendOutput(`<span class="text-green-400">user@computer</span>:<span class="text-blue-400">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;${command}`); // Echo the command
             const parts = command.split(' ').filter(p => p !== '');
             const cmd = parts[0];
             const args = parts.slice(1);
@@ -3175,18 +3258,17 @@
             switch (cmd.toLowerCase()) { // Case-insensitive commands
                 case 'help':
                     appendOutput('Available commands:');
-                    appendOutput('  ls - list directory contents');
-                    appendOutput('  cd <directory> - change directory');
-                    appendOutput('  echo <message> - print message');
-                    appendOutput('  clear - clear the terminal screen');
-                    appendOutput('  pwd - print working directory');
-                    appendOutput('  glinux version - show Glinux OS version');
+                    appendOutput('  <span class="text-yellow-400">ls</span> - list directory contents');
+                    appendOutput('  <span class="text-yellow-400">cd &lt;directory&gt;</span> - change directory');
+                    appendOutput('  <span class="text-yellow-400">echo &lt;message&gt;</span> - print message');
+                    appendOutput('  <span class="text-yellow-400">clear</span> - clear the terminal screen');
+                    appendOutput('  <span class="text-yellow-400">pwd</span> - print working directory');
                     break;
                 case 'ls':
-                    listDirectory(terminalOutput, window.currentPath);
+                    listDirectory(terminalOutput, window.currentPath, true); // Pass true to enable rich formatting
                     break;
                 case 'cd':
-                    changeDirectory(args[0], terminalOutput);
+                    changeDirectory(args[0], terminalOutput, updateTerminalPrompt); // Pass updateTerminalPrompt callback
                     break;
                 case 'echo':
                     appendOutput(args.join(' '));
@@ -3196,13 +3278,6 @@
                     break;
                 case 'pwd':
                     appendOutput(window.currentPath);
-                    break;
-                case 'glinux':
-                    if (args[0] && args[0].toLowerCase() === 'version') {
-                        appendOutput('Glinux 3S Preview 4X');
-                    } else {
-                        appendOutput(`'glinux ${args.join(' ')}' is not a valid Glinux command.`, 'error');
-                    }
                     break;
                 case '': // Empty command
                     break;
@@ -3221,6 +3296,7 @@
         });
 
         terminalInput.focus(); // Focus input on open
+        updateTerminalPrompt(); // Initial prompt update
     }
 
     // Helper functions for Terminal and File Explorer
@@ -3237,7 +3313,8 @@
         return current;
     }
 
-    function listDirectory(outputElement, currentPath) {
+    // Modified listDirectory to support rich formatting for terminal
+    function listDirectory(outputElement, currentPath, isTerminal = false) {
         const contents = getDirectoryContents(currentPath);
         if (!contents) {
             const p = document.createElement('pre');
@@ -3258,18 +3335,27 @@
         sortedItems.forEach(item => {
             const type = typeof contents[item] === 'object' ? 'DIR' : 'FILE';
             let formattedItem = '';
-            if (type === 'DIR') {
-                formattedItem = `<span class="text-blue-300"><i class="fa-solid fa-folder mr-2"></i>${item}/</span>`;
+            if (isTerminal) {
+                if (type === 'DIR') {
+                    formattedItem = `<span class="text-blue-300"><i class="fa-solid fa-folder mr-2"></i>${item}/</span>`;
+                } else {
+                    formattedItem = `<span class="text-gray-300"><i class="fa-solid fa-file mr-2"></i>${item}</span>`;
+                }
+                const p = document.createElement('pre');
+                p.innerHTML = formattedItem;
+                outputElement.appendChild(p);
             } else {
-                formattedItem = `<span class="text-gray-300"><i class="fa-solid fa-file mr-2"></i>${item}</span>`;
+                // Original file explorer rendering logic (currently unused for desktop icons, but for FE)
+                const iconClass = isFolder ? 'fa-folder text-yellow-500' : 'fa-file text-gray-500';
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex items-center p-2 rounded-md hover:bg-gray-700 cursor-pointer transition-colors';
+                itemElement.innerHTML = `<i class="fa-solid ${iconClass} mr-3 text-xl"></i><span>${item}</span>`;
+                outputElement.appendChild(itemElement);
             }
-            const p = document.createElement('pre');
-            p.innerHTML = formattedItem;
-            outputElement.appendChild(p);
         });
     }
 
-    function changeDirectory(dir, outputElement) {
+    function changeDirectory(dir, outputElement, callback) {
         if (!dir) {
             showMessage('Usage: cd <directory>');
             return;
@@ -3300,15 +3386,9 @@
 
         if (resolvedPathContents && typeof resolvedPathContents === 'object') { // Check if it's a valid directory object
             window.currentPath = testPath + (testPath.endsWith(':') ? '\\' : ''); // Ensure trailing slash for drives
+            if (callback) callback(); // Call the callback to update the prompt
         } else {
             appendOutput(`Directory not found: '${dir}'`, 'error');
-        }
-
-        // Update the terminal's displayed path for the next prompt
-        const terminalInput = outputElement.closest('.window-content').querySelector('input[type="text"]');
-        if (terminalInput) {
-            const pathSpan = terminalInput.previousElementSibling.querySelector('span:last-child');
-            if (pathSpan) pathSpan.textContent = window.currentPath.replace(/\\/g, '/');
         }
     }
 
@@ -3438,7 +3518,7 @@
                 requestAnimationFrame(animate);
             } else {
                 statusElement.textContent = 'Update Complete!';
-                showMessage('Windows has been updated to Glinux 4X Preview!'); // Personalize message
+                showMessage('Windows has been updated!'); // Generic message
             }
         }
         requestAnimationFrame(animate);
@@ -3480,7 +3560,7 @@
 
 
         // Update document title
-        document.title = "Windows 13 Concept (V0.4.0 Official)"; // Updated title for official release
+        document.title = "Windows 13 Concept (0.4.1)"; // Updated title
 
         // Initialize the snap preview element once
         initializeSnapPreview();
