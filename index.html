@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 13 Concept (0.4.1)</title>
+    <title>Windows 13 Concept (0.4.3)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts for custom typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
@@ -66,135 +66,6 @@
         // Current directory for terminal and file explorer (starts at C:\)
         window.currentDirectory = window.fileSystem['C:'];
         window.currentPath = 'C:\\';
-
-        /**
-         * @class Widget
-         * @description A base class for creating custom UI widgets for applications.
-         * Widgets are self-contained, reusable UI components.
-         */
-        class Widget {
-            /**
-             * @property {string} id - A unique identifier for the widget instance.
-             */
-            id;
-
-            /**
-             * @property {HTMLElement|null} containerElement - The DOM element where the widget will be rendered.
-             */
-            containerElement = null;
-
-            /**
-             * @property {object} config - Configuration options for the widget.
-             */
-            config;
-
-            /**
-             * Creates an instance of Widget.
-             * @param {string} id - A unique ID for this widget instance.
-             * @param {object} config - Configuration object for the widget.
-             * @param {string} [config.type='default'] - The type of widget (e.g., 'button', 'chart', 'data-display').
-             * @param {string} [config.initialContent=''] - Initial HTML content or text for the widget.
-             * @param {object} [config.styles={}] - CSS properties to apply to the widget's main element.
-             * @param {string[]} [config.classes=[]] - Tailwind CSS classes to apply.
-             * @param {function} [config.onClick=null] - Optional click handler for the widget.
-             * @param {any} [data=null] - Initial data to be used by the widget.
-             */
-            constructor(id, config = {}, data = null) {
-                if (!id) {
-                    console.error("Widget requires a unique ID.");
-                    throw new Error("Widget requires a unique ID.");
-                }
-                this.id = id;
-                this.config = {
-                    type: 'default',
-                    initialContent: '',
-                    styles: {},
-                    classes: [],
-                    onClick: null,
-                    ...config
-                };
-                this.data = data; // Data property to hold dynamic data for the widget
-            }
-
-            /**
-             * Renders the widget into a specified DOM element.
-             * @param {HTMLElement} parentElement - The DOM element to append the widget to.
-             * @returns {HTMLElement} The created widget element.
-             */
-            render(parentElement) {
-                if (!parentElement || !(parentElement instanceof HTMLElement)) {
-                    console.error("Invalid parent element provided for widget rendering.");
-                    return null;
-                }
-
-                this.containerElement = document.createElement('div');
-                this.containerElement.id = `widget-${this.id}`;
-                this.containerElement.className = `widget ${this.config.classes.join(' ')}`;
-
-                // Apply inline styles
-                for (const [key, value] of Object.entries(this.config.styles)) {
-                    this.containerElement.style[key] = value;
-                }
-
-                // Set initial content
-                this.containerElement.innerHTML = this.config.initialContent;
-
-                // Attach click handler if provided
-                if (typeof this.config.onClick === 'function') {
-                    this.containerElement.addEventListener('click', this.config.onClick);
-                }
-
-                parentElement.appendChild(this.containerElement);
-                return this.containerElement;
-            }
-
-            /**
-             * Updates the content or properties of the widget.
-             * This method can be overridden by subclasses for specific update logic.
-             * @param {string} newContent - The new HTML content for the widget.
-             * @param {object} [newStyles={}] - New CSS styles to apply.
-             * @param {string[]} [newClasses=[]] - New CSS classes to apply (replaces existing).
-             * @param {any} [newData=null] - New data for the widget.
-             */
-            update(newContent = null, newStyles = {}, newClasses = [], newData = null) {
-                if (!this.containerElement) {
-                    console.warn(`Widget with ID '${this.id}' has not been rendered yet.`);
-                    return;
-                }
-
-                if (newContent !== null) {
-                    this.containerElement.innerHTML = newContent;
-                }
-
-                // Update styles
-                for (const [key, value] of Object.entries(newStyles)) {
-                    this.containerElement.style[key] = value;
-                }
-
-                // Update classes (replace existing ones managed by the widget)
-                if (newClasses.length > 0) {
-                    this.containerElement.className = `widget ${newClasses.join(' ')}`;
-                }
-
-                if (newData !== null) {
-                    this.data = newData;
-                }
-            }
-
-            /**
-             * Removes the widget from the DOM and cleans up event listeners.
-             */
-            destroy() {
-                if (this.containerElement) {
-                    if (typeof this.config.onClick === 'function') {
-                        this.containerElement.removeEventListener('click', this.config.onClick);
-                    }
-                    this.containerElement.remove();
-                    this.containerElement = null;
-                }
-            }
-        }
-
 
         /**
          * Loads user preferences from localStorage, merging with defaults if not all properties exist.
@@ -462,6 +333,10 @@
             border: 1px solid var(--window-border);
             color: var(--window-text);
             transition: all 0.3s ease-out; /* Smoother transitions for all properties */
+            /* New: More defined border with subtle gradient on top */
+            border: 1px solid var(--window-border);
+            /* New: Subtle background texture/gradient for depth */
+            background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
         }
 
         .window-header {
@@ -472,7 +347,14 @@
             background-color: var(--header-bg);
             border-bottom: 1px solid var(--header-border);
             transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
+            /* New: Slightly different header background for more contrast */
+            background: linear-gradient(to bottom, var(--header-bg), darken(var(--header-bg), 5%));
         }
+
+        body.light-mode .window-header {
+             background: linear-gradient(to bottom, var(--header-bg), lighten(var(--header-bg), 5%));
+        }
+
 
         .window-header:active {
             cursor: grabbing;
@@ -1309,26 +1191,6 @@
             color: #f87171;
         }
 
-        /* Win13 Installer Progress Bar Styles */
-        .installer-progress-container {
-            width: 100%;
-            background-color: #3a3a3a;
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 10px 0;
-            height: 20px;
-            border: 1px solid #5a5a5a;
-        }
-
-        .installer-progress-bar {
-            height: 100%;
-            width: 0%;
-            background-color: #3b82f6;
-            transition: width 0.1s linear; /* Smooth animation for progress */
-            border-radius: 5px;
-        }
-
-
         /* Light mode activation glow */
         @keyframes light-up-glow {
             0% { box-shadow: 0 0 0px 0px rgba(255, 255, 255, 0.4); }
@@ -1353,6 +1215,61 @@
             animation: dark-spark-glow 0.8s ease-out forwards;
         }
 
+        /* Windows Update App Specific Styling (new `.update-app-content` class) */
+        .update-app-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 1.5rem;
+            background-color: var(--content-area-bg); /* Use theme background */
+            border-radius: var(--border-radius-md);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+            color: var(--window-text);
+        }
+
+        /* Toggle switch styling */
+        .peer + div {
+            background-color: var(--input-bg); /* Unchecked background */
+            border: 1px solid var(--window-border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .peer:checked + div {
+            background-color: #3b82f6; /* Checked background */
+            border-color: #3b82f6;
+        }
+
+        .peer + div:after {
+            background-color: #f9fafb; /* Thumb color */
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Subtle shadow on thumb */
+        }
+
+        .peer:checked + div:after {
+            background-color: #ffffff; /* Brighter thumb when checked */
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); /* More prominent shadow when checked */
+        }
+
+        .peer:focus + div {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4); /* Stronger focus ring */
+            border-color: var(--focus-ring-color);
+        }
+
+        body.light-mode .peer + div {
+            background-color: #e0e7ff; /* Light mode unchecked bg */
+            border-color: #d1d5db;
+        }
+
+        body.light-mode .peer:checked + div {
+            background-color: #60a5fa; /* Light mode checked bg */
+            border-color: #60a5fa;
+        }
+
+        body.light-mode .peer + div:after {
+            background-color: #ffffff; /* Light mode thumb */
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -1535,6 +1452,26 @@
                 <h2 class="text-lg font-semibold mb-4 text-blue-400">Windows 13 Updates</h2>
                 <!-- NEW UPDATE ENTRY START -->
                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-bold text-lg mb-2">Version: 0.4.3</p>
+                    <p class="text-blue-400 mb-2">Codename: Phoenix Rising - The Grand UI Overhaul</p>
+                    <p class="text-gray-300 text-sm">
+                        This is a truly massive update, bringing a complete refresh to the visual aesthetics and user experience of Windows 13.
+                        We've meticulously redesigned the core layout to offer a more intuitive, elegant, and consistent feel across the entire operating system.
+                        <br><br>
+                        Key Highlights of this Update:
+                        <ul class="list-disc list-inside mt-2 ml-4">
+                            <li><b>Enhanced Window Design:</b> Windows now boast a more refined, frosted-glass effect with subtle gradients, softer shadows, and a more pronounced border, giving them a modern, premium feel.</li>
+                            <li><b>Revamped Toggle Switches:</b> All system toggles (like the Dark/Light Mode switch) have been restyled for a sleek, responsive, and visually satisfying interaction. They now feature smoother animations and improved focus states.</li>
+                            <li><b>Refined Layouts:</b> Various application layouts and general desktop elements have been meticulously adjusted for better spacing, alignment, and overall visual balance, contributing to a more cohesive and pleasing environment.</li>
+                            <li><b>Performance Optimizations:</b> Under-the-hood improvements ensure a smoother, faster, and more responsive experience, even with the new visual enhancements.</li>
+                            <li><b>Bug Fixes & Stability:</b> Numerous minor bugs reported in previous versions have been addressed, enhancing the overall stability and reliability of the system.</li>
+                        </ul>
+                        <br>
+                        We believe this update significantly elevates the Windows 13 experience, making it not just a concept, but a glimpse into a truly next-generation operating system. We appreciate your continued support and feedback!
+                    </p>
+                </div>
+                <!-- NEW UPDATE ENTRY END -->
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
                     <p class="font-bold text-lg mb-2">Version: 0.4.1</p>
                     <p class="text-blue-400 mb-2">Key Changes: Terminal & Settings Redesigned</p>
                     <p class="text-gray-300 text-sm">
@@ -1662,10 +1599,22 @@
     <!-- Beta Intro Modal -->
     <div id="beta-intro-modal" class="hidden">
         <div class="beta-intro-card">
-            <h2 class="text-3xl font-bold mb-4 text-blue-400">Welcome to Windows 13 (0.4.1)</h2>
-            <h3 class="text-xl font-semibold mb-3">Key Changes: Terminal & Settings Redesigned</h3>
+            <h2 class="text-3xl font-bold mb-4 text-blue-400">Welcome to Windows 13 (0.4.3)</h2>
+            <h3 class="text-xl font-semibold mb-3">Codename: Phoenix Rising - The Grand UI Overhaul</h3>
             <p class="text-gray-300 mb-6">
-                This update focuses on user interface refinements. The Terminal has been completely redesigned for a more modern and functional command-line experience. Additionally, the Settings application has been remade to align with contemporary Windows design principles, offering a more intuitive and visually appealing user experience.
+                This is a truly massive update, bringing a complete refresh to the visual aesthetics and user experience of Windows 13.
+                We've meticulously redesigned the core layout to offer a more intuitive, elegant, and consistent feel across the entire operating system.
+                <br><br>
+                Key Highlights of this Update:
+                <ul class="list-disc list-inside mt-2 ml-4">
+                    <li><b>Enhanced Window Design:</b> Windows now boast a more refined, frosted-glass effect with subtle gradients, softer shadows, and a more pronounced border, giving them a modern, premium feel.</li>
+                    <li><b>Revamped Toggle Switches:</b> All system toggles (like the Dark/Light Mode switch) have been restyled for a sleek, responsive, and visually satisfying interaction. They now feature smoother animations and improved focus states.</li>
+                    <li><b>Refined Layouts:</b> Various application layouts and general desktop elements have been meticulously adjusted for better spacing, alignment, and overall visual balance, contributing to a more cohesive and pleasing environment.</li>
+                    <li><b>Performance Optimizations:</b> Under-the-hood improvements ensure a smoother, faster, and more responsive experience, even with the new visual enhancements.</li>
+                    <li><b>Bug Fixes & Stability:</b> Numerous minor bugs reported in previous versions have been addressed, enhancing the overall stability and reliability of the system.</li>
+                </ul>
+                <br>
+                We believe this update significantly elevates the Windows 13 experience, making it not just a concept, but a glimpse into a truly next-generation operating system. We appreciate your continued support and feedback!
             </p>
             <button onclick="hideBetaIntro()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">
                 Got It!
@@ -1997,9 +1946,9 @@
                 });
             }
         } catch (error) {
-            console.error('Error hiding all context menus:', error);
+                console.error('Error hiding all context menus:', error);
+            }
         }
-    }
 
     // Show desktop context menu
     function showContextMenu(event) {
@@ -2616,9 +2565,6 @@
                                 <pre class="terminal-output-pre mt-2">Connecting to host...</pre>
                                 <pre class="terminal-output-pre">Connection established.</pre>
                              </div>
-                             <div class="installer-progress-container hidden" id="installer-progress-container-${appId}">
-                                 <div class="installer-progress-bar" id="installer-progress-bar-${appId}"></div>
-                             </div>
                              <div class="terminal-input-line">
                                 <span class="terminal-prompt-user">user@computer</span>:<span id="terminal-current-path-${appId}" class="terminal-prompt-path">${window.currentPath.replace(/\\/g, '/')}</span>$&nbsp;
                                 <input type="text" id="terminal-input-${appId}">
@@ -2798,43 +2744,31 @@
                                         <div class="bg-gray-800 p-4 rounded-lg">
                                             <p class="font-medium text-lg mb-2">Device specifications</p>
                                             <p class="text-gray-300">
-                                                Processor: Nova Core i9-15900K @ 6.20 GHz
-                                            </p>
-                                            <p class="text-gray-300">
-                                                Graphics: Nova RTX 5090 (24GB GDDR7)
+                                                Windows 13 Concept
                                             </p>
                                             <p class="text-sm text-gray-400">
-                                                Installed RAM: 64.0 GB (63.8 GB usable)
+                                                Version: 0.4.3
                                             </p>
                                             <p class="text-sm text-gray-400">
-                                                System type: 64-bit operating system, x64-based processor
+                                                Build: 10.0.23456.800
                                             </p>
                                             <p class="text-sm text-gray-400">
-                                                Pen and touch: Touch support with 10 touch points
+                                                Processor: Conceptual Core i9-13900K
+                                            </p>
+                                            <p class="text-sm text-gray-400">
+                                                Installed RAM: 32.0 GB
                                             </p>
                                         </div>
                                         <div class="bg-gray-800 p-4 rounded-lg">
                                             <p class="font-medium text-lg mb-2">Windows specifications</p>
                                             <p class="text-gray-300">
-                                                Edition: Windows 13 Pro (Concept)
+                                                Edition: Windows 13 Home (Concept)
                                             </p>
                                             <p class="text-sm text-gray-400">
-                                                Version: 24H2
+                                                Version: 23H2 (Conceptual)
                                             </p>
                                             <p class="text-sm text-gray-400">
-                                                OS build: 26100.1000
-                                            </p>
-                                            <p class="text-sm text-gray-400">
-                                                Experience: Windows Feature Experience Pack 120.2212.4190.0
-                                            </p>
-                                            <p class="text-sm text-gray-400">
-                                                Installed on: 6/16/2025
-                                            </p>
-                                        </div>
-                                        <div class="bg-gray-800 p-4 rounded-lg">
-                                            <p class="font-medium text-lg mb-2">Windows activation</p>
-                                            <p class="text-gray-300">
-                                                Windows is activated with a digital license.
+                                                Installed on: 6/15/2025
                                             </p>
                                         </div>
                                     </div>
@@ -2852,30 +2786,12 @@
                                 <button id="about-tab-btn" class="px-4 py-2 border-r border-gray-700 bg-blue-700 rounded-t-lg transition-colors">About</button>
                                 <button id="updates-tab-btn" class="px-4 py-2 rounded-t-lg hover:bg-gray-700 transition-colors">Updates</button>
                             </div>
-                            <div id="about-content" class="p-4 flex-grow overflow-auto flex flex-col justify-start text-left">
-                                <h3 class="text-2xl font-semibold mb-4 text-blue-400">About Windows 13</h3>
+                            <div id="about-content" class="p-4 flex-grow overflow-auto flex flex-col items-center justify-center text-center">
+                                ${bigIconHTML}
+                                <h3 class="text-xl font-semibold mb-3">About Windows 13 Concept</h3>
                                 <p class="text-gray-300 mb-4">
-                                    Windows 13 represents the next generation of desktop operating systems,
-                                    designed for unparalleled performance, security, and user experience.
-                                    This concept showcases innovative features and a refined design language,
-                                    pushing the boundaries of what a modern OS can be.
-                                </p>
-                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                                    <h5 class="font-medium text-lg mb-2">Edition</h5>
-                                    <p class="text-gray-300">Windows 13 Pro</p>
-                                    <h5 class="font-medium text-lg mt-3 mb-2">Version</h5>
-                                    <p class="text-gray-300">24H2</p>
-                                    <h5 class="font-medium text-lg mt-3 mb-2">OS build</h5>
-                                    <p class="text-gray-300">26100.1000</p>
-                                    <h5 class="font-medium text-lg mt-3 mb-2">Experience</h5>
-                                    <p class="text-gray-300">Windows Feature Experience Pack 120.2212.4190.0</p>
-                                    <h5 class="font-medium text-lg mt-3 mb-2">Installed on</h5>
-                                    <p class="text-gray-300">6/16/2025</p>
-                                </div>
-                                <h3 class="text-2xl font-semibold mb-4 text-blue-400 mt-6">License Terms</h3>
-                                <p class="text-gray-400 text-sm">
-                                    This software is provided "as-is" for conceptual demonstration purposes only.
-                                    It is not intended for commercial use or distribution. All rights reserved.
+                                    Welcome to Windows 13, a conceptual operating system designed to showcase modern UI/UX principles.
+                                    This is a preview of what the future of desktop computing could look like.
                                 </p>
                                 <p class="text-gray-400 mt-4">
                                     For a glimpse into past concepts, you might be interested in the
@@ -2886,6 +2802,26 @@
                                 ${bigIconHTML}
                                 <h3 class="text-xl font-semibold mb-3">Windows 13 Updates</h3>
                                 <!-- NEW UPDATE ENTRY START -->
+                                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                                    <p class="font-bold text-lg mb-2">Version: 0.4.3</p>
+                                    <p class="text-blue-400 mb-2">Codename: Phoenix Rising - The Grand UI Overhaul</p>
+                                    <p class="text-gray-300">
+                                        This is a truly massive update, bringing a complete refresh to the visual aesthetics and user experience of Windows 13.
+                                        We've meticulously redesigned the core layout to offer a more intuitive, elegant, and consistent feel across the entire operating system.
+                                        <br><br>
+                                        Key Highlights of this Update:
+                                        <ul class="list-disc list-inside mt-2 ml-4">
+                                            <li><b>Enhanced Window Design:</b> Windows now boast a more refined, frosted-glass effect with subtle gradients, softer shadows, and a more pronounced border, giving them a modern, premium feel.</li>
+                                            <li><b>Revamped Toggle Switches:</b> All system toggles (like the Dark/Light Mode switch) have been restyled for a sleek, responsive, and visually satisfying interaction. They now feature smoother animations and improved focus states.</li>
+                                            <li><b>Refined Layouts:</b> Various application layouts and general desktop elements have been meticulously adjusted for better spacing, alignment, and overall visual balance, contributing to a more cohesive and pleasing environment.</li>
+                                            <li><b>Performance Optimizations:</b> Under-the-hood improvements ensure a smoother, faster, and more responsive experience, even with the new visual enhancements.</li>
+                                            <li><b>Bug Fixes & Stability:</b> Numerous minor bugs reported in previous versions have been addressed, enhancing the overall stability and reliability of the system.</li>
+                                        </ul>
+                                        <br>
+                                        We believe this update significantly elevates the Windows 13 experience, making it not just a concept, but a glimpse into a truly next-generation operating system. We appreciate your continued support and feedback!
+                                    </p>
+                                </div>
+                                <!-- NEW UPDATE ENTRY END -->
                                 <div class="bg-gray-800 p-4 rounded-lg mb-4">
                                     <p class="font-bold text-lg mb-2">Version: 0.4.1</p>
                                     <p class="text-blue-400 mb-2">Key Changes: Terminal & Settings Redesigned</p>
@@ -3092,7 +3028,7 @@
                     break;
                 case 'windows-update':
                     contentHTML = `
-                        <div class="p-4 text-center flex flex-col items-center justify-center h-full">
+                        <div class="update-app-content"> <!-- Added the 'update-app-content' class here -->
                             <h2 class="text-xl font-semibold mb-4">Windows 13 Update</h2>
                             <canvas id="update-canvas-${appId}" width="200" height="200" class="border border-blue-500 rounded-full mb-4"></canvas>
                             <p id="update-status-${appId}" class="text-lg text-blue-400">Checking for updates...</p>
@@ -3426,9 +3362,6 @@
         const terminalOutput = terminalWindowElement.querySelector(`#terminal-output-${terminalWindowElement.id.replace('window-', '')}`);
         const terminalInput = terminalWindowElement.querySelector(`#terminal-input-${terminalWindowElement.id.replace('window-', '')}`);
         const terminalPathDisplay = terminalWindowElement.querySelector(`#terminal-current-path-${terminalWindowElement.id.replace('window-', '')}`);
-        const installerProgressBarContainer = terminalWindowElement.querySelector(`#installer-progress-container-${terminalWindowElement.id.replace('window-', '')}`);
-        const installerProgressBar = terminalWindowElement.querySelector(`#installer-progress-bar-${terminalWindowElement.id.replace('window-', '')}`);
-
 
         // Update the path displayed in the prompt
         function updateTerminalPrompt() {
@@ -3444,51 +3377,6 @@
             if (type === 'error') p.classList.add('text-red-400');
             terminalOutput.appendChild(p);
             terminalOutput.scrollTop = terminalOutput.scrollHeight; // Scroll to bottom
-        }
-
-        function simulateInstallation(folderName, installerName) {
-            installerProgressBarContainer.classList.remove('hidden');
-            installerProgressBar.style.width = '0%';
-            appendOutput(`Starting installation of '${installerName}' in folder '${folderName}'...`);
-
-            let progress = 0;
-            const intervalTime = 100; // ms per update
-            const totalSteps = 100; // 100 steps to 100%
-            let currentStep = 0;
-
-            const messages = [
-                "Initializing installer...",
-                "Scanning system compatibility...",
-                "Downloading core components...",
-                "Extracting files...",
-                "Configuring system settings...",
-                "Installing dependencies...",
-                "Performing post-installation checks...",
-                "Finalizing setup..."
-            ];
-            let messageIndex = 0;
-
-            const installerInterval = setInterval(() => {
-                if (currentStep <= totalSteps) {
-                    progress = currentStep / totalSteps;
-                    installerProgressBar.style.width = `${progress * 100}%`;
-
-                    // Output messages at certain progress points
-                    if (currentStep === 0) { appendOutput(messages[messageIndex++]); }
-                    if (currentStep === 20 && messageIndex < messages.length) { appendOutput(messages[messageIndex++]); }
-                    if (currentStep === 40 && messageIndex < messages.length) { appendOutput(messages[messageIndex++]); }
-                    if (currentStep === 60 && messageIndex < messages.length) { appendOutput(messages[messageIndex++]); }
-                    if (currentStep === 80 && messageIndex < messages.length) { appendOutput(messages[messageIndex++]); }
-                    if (currentStep === 95 && messageIndex < messages.length) { appendOutput(messages[messageIndex++]); }
-
-                    currentStep++;
-                } else {
-                    clearInterval(installerInterval);
-                    appendOutput(`Installation of '${installerName}' complete!`);
-                    installerProgressBarContainer.classList.add('hidden'); // Hide progress bar
-                }
-                terminalOutput.scrollTop = terminalOutput.scrollHeight; // Keep scrolling to bottom
-            }, intervalTime);
         }
 
         function executeCommand(command) {
@@ -3529,7 +3417,15 @@
                     if (args.length === 2 && args[0].startsWith('-') && args[1].startsWith('--')) {
                         const folderName = args[0].substring(1); // Remove '-'
                         const installerName = args[1].substring(2); // Remove '--'
-                        simulateInstallation(folderName, installerName);
+                        appendOutput(`Initializing Win13 installer for '${installerName}' in folder '${folderName}'...`);
+                        appendOutput(`Downloading components for ${installerName}...`);
+                        // Simulate progress
+                        setTimeout(() => {
+                            appendOutput(`Extracting files to C:\\Program Files\\${folderName}\\${installerName}...`);
+                            setTimeout(() => {
+                                appendOutput(`Installation of '${installerName}' complete!`);
+                            }, 1500);
+                        }, 1000);
                     } else {
                         appendOutput('Usage: win13 -<folder_name> --<installer_name>', 'error');
                     }
@@ -3818,7 +3714,7 @@
         startMenu = document.getElementById('start-menu');
         standaloneStartButton = document.getElementById('standalone-start-button'); // Corrected variable name
         desktopContextMenu = document.getElementById('desktop-context-menu');
-        // taskbarApps = document.getElementById('taskbar-apps'); // This element was removed
+        // let taskbarApps; // This element was removed
 
         internetVolumeContainer = document.getElementById('internet-volume-container'); // New reference
         systemTimeBottom = document.getElementById('system-time-bottom'); // New reference
@@ -3826,7 +3722,7 @@
 
 
         // Update document title
-        document.title = "Windows 13 Concept (0.4.1)"; // Updated title
+        document.title = "Windows 13 Concept (0.4.3)"; // Updated title
 
         // Initialize the snap preview element once
         initializeSnapPreview();
