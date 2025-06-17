@@ -68,6 +68,103 @@
         window.currentPath = 'C:\\';
 
         /**
+         * Centralized data for Windows 13 updates.
+         * This array will be used to populate update sections in both the Start Menu and the About Windows 13 app.
+         */
+        window.windowsUpdates = [
+            {
+                version: '0.4.3',
+                codename: 'Window changes & UI changes',
+                description: `
+                    This is a truly massive update, bringing a complete refresh to the visual aesthetics and user experience of Windows 13.
+                    We've meticulously redesigned the core layout to offer a more intuitive, elegant, and consistent feel across the entire operating system.
+                    <br><br>
+                    Key Highlights of this Update:
+                    <ul class="list-disc list-inside mt-2 ml-4">
+                        <li><b>Enhanced Window Design:</b> Windows now boast a more refined, frosted-glass effect with subtle gradients, softer shadows, and a more pronounced border, giving them a modern, premium feel.</li>
+                        <li><b>Revamped Toggle Switches:</b> All system toggles (like the Dark/Light Mode switch) have been restyled for a sleek, responsive, and visually satisfying interaction. They now feature smoother animations and improved focus states.</li>
+                        <li><b>Refined Layouts:</b> Various application layouts and general desktop elements have been meticulously adjusted for better spacing, alignment, and overall visual balance, contributing to a more cohesive and pleasing environment.</li>
+                        <li><b>Performance Optimizations:</b> Under-the-hood improvements ensure a smoother, faster, and more responsive experience, even with the new visual enhancements.</li>
+                        <li><b>Bug Fixes & Stability:</b> Numerous minor bugs reported in previous versions have been addressed, enhancing the overall stability and reliability of the system.</li>
+                    </ul>
+                    <br>
+                    We believe this update significantly elevates the Windows 13 experience, making it not just a concept, but a glimpse into a truly next-generation operating system. We appreciate your continued support and feedback!
+                `
+            },
+            {
+                version: '0.4.1',
+                codename: 'Terminal & Settings Redesigned',
+                description: `
+                    This update focuses on user interface refinements. The Terminal has been completely redesigned for a more modern and functional command-line experience. Additionally, the Settings application has been remade to align with contemporary Windows design principles, offering a more intuitive and visually appealing user experience.
+                `
+            },
+            {
+                version: 'V0.4.0 (Official)',
+                codename: 'Stability & Feature Parity',
+                description: `
+                    Thank you for your patience! This official release was delayed to ensure critical bug fixes,
+                    performance optimizations, and feature completeness for a seamless user experience.
+                    We've focused on enhancing underlying stability, refining UI animations, and implementing
+                    robust error handling. This version brings all the promised features of the beta
+                    into a production-ready state, ensuring reliability and a polished feel.
+                `
+            },
+            {
+                version: '0.3.95',
+                codename: 'Background remake & Login change info',
+                description: `
+                    This update introduces significant visual enhancements, allowing users to customize their desktop
+                    backgrounds with both predefined options and custom image URLs. Additionally, the login screen
+                    now includes improved informational displays, providing clearer feedback during the sign-in process.
+                    These changes aim to personalize the user experience and streamline initial system access.
+                `
+            },
+            {
+                version: '0.3.9',
+                codename: 'Layout change & Start Menu change',
+                description: `
+                    This update brings a significant overhaul to the desktop layout.
+                    The taskbar has been removed, integrating its core functionalities into the Start Menu.
+                    The desktop now features a left-aligned icon zone and a right-aligned "Shortcuts" area,
+                    which prominently displays the time and date, now clickable to open the new "Date/Time" application.
+                `
+            },
+            {
+                version: '0.3.8',
+                codename: 'Scrolling added',
+                description: `
+                    This mini-update ensures that various application windows and content areas within the OS
+                    now correctly support scrolling when their content exceeds the visible area.
+                    This improves usability and access to information in apps like File Explorer, Terminal,
+                    and other dynamic content displays.
+                `
+            },
+            {
+                version: '0.3.73',
+                codename: 'Boot up sound Update & Loading Update',
+                description: `
+                    This significant update enhances the user's initial experience by refining the boot-up sound for a more pleasing auditory feedback.
+                    Additionally, the loading spinner throughout the system has been redesigned to align with modern Windows aesthetics, offering a smoother and more visually appealing waiting indicator.
+                `
+            },
+            {
+                version: '0.3.4',
+                codename: 'Login Patch & boot up sounds',
+                description: `
+                    This update revamps the login screen with a modern aesthetic and introduces a subtle boot-up sound for a more immersive experience.
+                `
+            },
+            {
+                version: '0.3.0',
+                codename: 'Desktop columns & a Windows Update setting (alpha version)',
+                description: `
+                    This update introduces a more organized desktop layout with columns and adds
+                    a conceptual Windows Update setting for future expansion.
+                `
+            }
+        ];
+
+        /**
          * Loads user preferences from localStorage, merging with defaults if not all properties exist.
          * Applies the loaded preferences to the UI.
          */
@@ -1450,98 +1547,8 @@
             <!-- Middle Panel: Updates -->
             <div class="w-1/3 border-r border-gray-700 px-4 overflow-y-auto">
                 <h2 class="text-lg font-semibold mb-4 text-blue-400">Windows 13 Updates</h2>
-                <!-- NEW UPDATE ENTRY START -->
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: 0.4.3</p>
-                    <p class="text-blue-400 mb-2">Codename: Window changes & UI changes</p>
-                    <p class="text-gray-300 text-sm">
-                        This is a truly massive update, bringing a complete refresh to the visual aesthetics and user experience of Windows 13.
-                        We've meticulously redesigned the core layout to offer a more intuitive, elegant, and consistent feel across the entire operating system.
-                        <br><br>
-                        Key Highlights of this Update:
-                        <ul class="list-disc list-inside mt-2 ml-4">
-                            <li><b>Enhanced Window Design:</b> Windows now boast a more refined, frosted-glass effect with subtle gradients, softer shadows, and a more pronounced border, giving them a modern, premium feel.</li>
-                            <li><b>Revamped Toggle Switches:</b> All system toggles (like the Dark/Light Mode switch) have been restyled for a sleek, responsive, and visually satisfying interaction. They now feature smoother animations and improved focus states.</li>
-                            <li><b>Refined Layouts:</b> Various application layouts and general desktop elements have been meticulously adjusted for better spacing, alignment, and overall visual balance, contributing to a more cohesive and pleasing environment.</li>
-                            <li><b>Performance Optimizations:</b> Under-the-hood improvements ensure a smoother, faster, and more responsive experience, even with the new visual enhancements.</li>
-                            <li><b>Bug Fixes & Stability:</b> Numerous minor bugs reported in previous versions have been addressed, enhancing the overall stability and reliability of the system.</li>
-                        </ul>
-                        <br>
-                        We believe this update significantly elevates the Windows 13 experience, making it not just a concept, but a glimpse into a truly next-generation operating system. We appreciate your continued support and feedback!
-                    </p>
-                </div>
-                <!-- NEW UPDATE ENTRY END -->
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: 0.4.1</p>
-                    <p class="text-blue-400 mb-2">Key Changes: Terminal & Settings Redesigned</p>
-                    <p class="text-gray-300 text-sm">
-                        This update focuses on user interface refinements. The Terminal has been completely redesigned for a more modern and functional command-line experience. Additionally, the Settings application has been remade to align with contemporary Windows design principles, offering a more intuitive and visually appealing user experience.
-                    </p>
-                </div>
-                <!-- NEW UPDATE ENTRY END -->
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: V0.4.0 (Official)</p>
-                    <p class="text-blue-400 mb-2">Codename: Stability & Feature Parity</p>
-                    <p class="text-gray-300 text-sm">
-                        Thank you for your patience! This official release was delayed to ensure critical bug fixes,
-                        performance optimizations, and feature completeness for a seamless user experience.
-                        We've focused on enhancing underlying stability, refining UI animations, and implementing
-                        robust error handling. This version brings all the promised features of the beta
-                        into a production-ready state, ensuring reliability and a polished feel.
-                    </p>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
-                    <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
-                    <p class="text-gray-300 text-sm">
-                        This update introduces significant visual enhancements, allowing users to customize their desktop
-                        backgrounds with both predefined options and custom image URLs. Additionally, the login screen
-                        now includes improved informational displays, providing clearer feedback during the sign-in process.
-                        These changes aim to personalize the user experience and streamline initial system access.
-                    </p>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: 0.3.9</p>
-                    <p class="text-blue-400 mb-2">Codename: Layout change & Start Menu change</p>
-                    <p class="text-gray-300 text-sm">
-                        This update brings a significant overhaul to the desktop layout.
-                        The taskbar has been removed, integrating its core functionalities into the Start Menu.
-                        The desktop now features a left-aligned icon zone and a right-aligned "Shortcuts" area,
-                        which prominently displays the time and date, now clickable to open the new "Date/Time" application.
-                    </p>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: 0.3.8</p>
-                    <p class="text-blue-400 mb-2">Codename: Scrolling added</p>
-                    <p class="text-gray-300 text-sm">
-                        This mini-update ensures that various application windows and content areas within the OS
-                        now correctly support scrolling when their content exceeds the visible area.
-                        This improves usability and access to information in apps like File Explorer, Terminal,
-                        and other dynamic content displays.
-                    </p>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: 0.3.73</p>
-                    <p class="text-blue-400 mb-2">Codename: Boot up sound Update & Loading Update</p>
-                    <p class="text-gray-300 text-sm">
-                        This significant update enhances the user's initial experience by refining the boot-up sound for a more pleasing auditory feedback.
-                        Additionally, the loading spinner throughout the system has been redesigned to align with modern Windows aesthetics, offering a smoother and more visually appealing waiting indicator.
-                    </p>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-lg mb-4">
-                    <p class="font-bold text-lg mb-2">Version: 0.3.4</p>
-                    <p class="text-blue-400 mb-2">Codename: Login Patch & boot up sounds</p>
-                    <p class="text-300 text-sm">
-                        This update revamps the login screen with a modern aesthetic and introduces a subtle boot-up sound for a more immersive experience.
-                    </p>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-lg">
-                    <p class="font-bold text-lg mb-2">Version: 0.3.0</p>
-                    <p class="text-blue-400 mb-2">Codename: Desktop columns & a Windows Update setting (alpha version)</p>
-                    <p class="text-gray-300 text-sm">
-                        This update introduces a more organized desktop layout with columns and adds
-                        a conceptual Windows Update setting for future expansion.
-                    </p>
+                <div id="start-menu-updates-content" class="space-y-4">
+                    <!-- Updates will be dynamically loaded here -->
                 </div>
             </div>
 
@@ -1702,7 +1709,18 @@
      * Shows the beta introduction modal if it hasn't been shown before.
      */
     function showBetaIntro() {
+        // Find the beta intro for the latest update.
+        // For now, it's hardcoded to the top one in the windowsUpdates array.
+        // If a betaIntroShown property is specifically tied to each update, this logic would change.
         if (!window.userPreferences.betaIntroShown && betaIntroModal) {
+            const latestUpdate = window.windowsUpdates[0]; // Assuming the first entry is the latest
+            if (latestUpdate) {
+                // Populate the beta intro modal with the latest update info
+                betaIntroModal.querySelector('h2').textContent = `Welcome to Windows 13 (${latestUpdate.version})`;
+                betaIntroModal.querySelector('h3').textContent = `Codename: ${latestUpdate.codename}`;
+                betaIntroModal.querySelector('p').innerHTML = latestUpdate.description;
+            }
+
             betaIntroModal.classList.remove('hidden');
             setTimeout(() => betaIntroModal.classList.add('show'), 50); // Small delay for CSS transition
         }
@@ -1891,12 +1909,33 @@
     }
 
 
+    /**
+     * Populates the start menu updates section.
+     */
+    function populateStartMenuUpdates() {
+        const updatesContainer = document.getElementById('start-menu-updates-content');
+        if (updatesContainer) {
+            updatesContainer.innerHTML = ''; // Clear existing content
+            window.windowsUpdates.forEach(update => {
+                const updateDiv = document.createElement('div');
+                updateDiv.className = 'bg-gray-800 p-4 rounded-lg mb-4';
+                updateDiv.innerHTML = `
+                    <p class="font-bold text-lg mb-2">Version: ${update.version}</p>
+                    <p class="text-blue-400 mb-2">Codename: ${update.codename}</p>
+                    <p class="text-gray-300 text-sm">${update.description}</p>
+                `;
+                updatesContainer.appendChild(updateDiv);
+            });
+        }
+    }
+
     // Function to toggle Start Menu visibility
     function toggleStartMenu() {
         try {
             const startMenuElement = document.getElementById('start-menu');
             if (startMenuElement) {
                 if (startMenuElement.classList.contains('hidden')) {
+                    populateStartMenuUpdates(); // Populate updates when opening start menu
                     startMenuElement.classList.remove('hidden');
                     // Optional: animate using anime.js for more complex effects
                     anime({
@@ -2449,6 +2488,7 @@
         const updatesContent = parentWindow.querySelector('#about-windows-updates-content'); // Updated ID
         const aboutTabBtn = parentWindow.querySelector('#about-windows-about-tab-btn'); // Updated ID
         const updatesTabBtn = parentWindow.querySelector('#about-windows-updates-tab-btn'); // Updated ID
+        const updatesContainer = parentWindow.querySelector('#about-windows-updates-container'); // Container for updates
 
         if (tabName === 'about') {
             if(aboutContent) aboutContent.classList.remove('hidden');
@@ -2471,6 +2511,20 @@
             if(updatesTabBtn) {
                 updatesTabBtn.classList.add('bg-blue-700');
                 updatesTabBtn.classList.remove('bg-gray-800', 'hover:bg-gray-700');
+            }
+            // Populate the updates content when the tab is switched to it
+            if (updatesContainer) {
+                updatesContainer.innerHTML = ''; // Clear existing content
+                window.windowsUpdates.forEach(update => {
+                    const updateDiv = document.createElement('div');
+                    updateDiv.className = 'bg-gray-800 p-4 rounded-lg';
+                    updateDiv.innerHTML = `
+                        <p class="font-bold text-lg mb-2">Version: ${update.version}</p>
+                        <p class="text-blue-400 mb-2">Codename: ${update.codename}</p>
+                        <p class="text-gray-300 text-sm">${update.description}</p>
+                    `;
+                    updatesContainer.appendChild(updateDiv);
+                });
             }
         }
     }
@@ -2963,99 +3017,8 @@
 
                             <div id="about-windows-updates-content" class="hidden flex-grow overflow-auto p-4">
                                 <h4 class="text-2xl font-semibold mb-6">Windows 13 Updates History</h4>
-                                <div class="space-y-4">
-                                    <!-- NEW UPDATE ENTRY START -->
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.4.3</p>
-                                        <p class="text-blue-400 mb-2">Codename: Window changes & UI changes</p>
-                                        <p class="text-gray-300 text-sm">
-                                            This is a truly massive update, bringing a complete refresh to the visual aesthetics and user experience of Windows 13.
-                                            We've meticulously redesigned the core layout to offer a more intuitive, elegant, and consistent feel across the entire operating system.
-                                            <br><br>
-                                            Key Highlights of this Update:
-                                            <ul class="list-disc list-inside mt-2 ml-4">
-                                                <li><b>Enhanced Window Design:</b> Windows now boast a more refined, frosted-glass effect with subtle gradients, softer shadows, and a more pronounced border, giving them a modern, premium feel.</li>
-                                                <li><b>Revamped Toggle Switches:</b> All system toggles (like the Dark/Light Mode switch) have been restyled for a sleek, responsive, and visually satisfying interaction. They now feature smoother animations and improved focus states.</li>
-                                                <li><b>Refined Layouts:</b> Various application layouts and general desktop elements have been meticulously adjusted for better spacing, alignment, and overall visual balance, contributing to a more cohesive and pleasing environment.</li>
-                                                <li><b>Performance Optimizations:</b> Under-the-hood improvements ensure a smoother, faster, and more responsive experience, even with the new visual enhancements.</li>
-                                                <li><b>Bug Fixes & Stability:</b> Numerous minor bugs reported in previous versions have been addressed, enhancing the overall stability and reliability of the system.</li>
-                                            </ul>
-                                            <br>
-                                            We believe this update significantly elevates the Windows 13 experience, making it not just a concept, but a glimpse into a truly next-generation operating system. We appreciate your continued support and feedback!
-                                        </p>
-                                    </div>
-                                    <!-- NEW UPDATE ENTRY END -->
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.4.1</p>
-                                        <p class="text-blue-400 mb-2">Key Changes: Terminal & Settings Redesigned</p>
-                                        <p class="text-gray-300 text-sm">
-                                            This update focuses on user interface refinements. The Terminal has been completely redesigned for a more modern and functional command-line experience. Additionally, the Settings application has been remade to align with contemporary Windows design principles, offering a more intuitive and visually appealing user experience.
-                                        </p>
-                                    </div>
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: V0.4.0 (Official)</p>
-                                        <p class="text-blue-400 mb-2">Codename: Stability & Feature Parity</p>
-                                        <p class="text-gray-300 text-sm">
-                                            Thank you for your patience! This official release was delayed to ensure critical bug fixes,
-                                            performance optimizations, and feature completeness for a seamless user experience.
-                                            We've focused on enhancing underlying stability, refining UI animations, and implementing
-                                            robust error handling. This version brings all the promised features of the beta
-                                            into a production-ready state, ensuring reliability and a polished feel.
-                                        </p>
-                                    </div>
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.3.95</p>
-                                        <p class="text-blue-400 mb-2">Codename: Background remake & Login change info</p>
-                                        <p class="text-gray-300 text-sm">
-                                            This update introduces significant visual enhancements, allowing users to customize their desktop
-                                            backgrounds with both predefined options and custom image URLs. Additionally, the login screen
-                                            now includes improved informational displays, providing clearer feedback during the sign-in process.
-                                            These changes aim to personalize the user experience and streamline initial system access.
-                                        </p>
-                                    </div>
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.3.9</p>
-                                        <p class="text-blue-400 mb-2">Codename: Layout change & Start Menu change</p>
-                                        <p class="text-gray-300 text-sm">
-                                            This update brings a significant overhaul to the desktop layout.
-                                            The taskbar has been removed, integrating its core functionalities into the Start Menu.
-                                            The desktop now features a left-aligned icon zone and a right-aligned "Shortcuts" area,
-                                            which prominently displays the time and date, now clickable to open the new "Date/Time" application.
-                                        </p>
-                                    </div>
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.3.8</p>
-                                        <p class="text-blue-400 mb-2">Codename: Scrolling added</p>
-                                        <p class="text-gray-300 text-sm">
-                                            This mini-update ensures that various application windows and content areas within the OS
-                                            now correctly support scrolling when their content exceeds the visible area.
-                                            This improves usability and access to information in apps like File Explorer, Terminal,
-                                            and other dynamic content displays.
-                                        </p>
-                                    </div>
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.3.73</p>
-                                        <p class="text-blue-400 mb-2">Codename: Boot up sound Update & Loading Update</p>
-                                        <p class="text-gray-300 text-sm">
-                                            This significant update enhances the user's initial experience by refining the boot-up sound for a more pleasing auditory feedback.
-                                            Additionally, the loading spinner throughout the system has been redesigned to align with modern Windows aesthetics, offering a smoother and more visually appealing waiting indicator.
-                                        </p>
-                                    </div>
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.3.4</p>
-                                        <p class="text-blue-400 mb-2">Codename: Login Patch & boot up sounds</p>
-                                        <p class="text-300 text-sm">
-                                            This update revamps the login screen with a modern aesthetic and introduces a subtle boot-up sound for a more immersive experience.
-                                        </p>
-                                    </div>
-                                    <div class="bg-gray-800 p-4 rounded-lg">
-                                        <p class="font-bold text-lg mb-2">Version: 0.3.0</p>
-                                        <p class="text-blue-400 mb-2">Codename: Desktop columns & a Windows Update setting (alpha version)</p>
-                                        <p class="text-gray-300 text-sm">
-                                            This update introduces a more organized desktop layout with columns and adds
-                                            a conceptual Windows Update setting for future expansion.
-                                        </p>
-                                    </div>
+                                <div id="about-windows-updates-container" class="space-y-4">
+                                    <!-- Updates will be dynamically loaded here -->
                                 </div>
                             </div>
                         </div>
