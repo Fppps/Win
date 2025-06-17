@@ -21,8 +21,7 @@
             password: '', // Storing password in plaintext for demo ONLY. In production, this MUST be a hashed password.
             wallpaperUrl: 'Assets/Background/BackgroundV2.png',
             theme: 'dark-mode', // 'dark-mode' or 'light-mode'
-            // For the beta intro modal
-            betaIntroShown: false
+            // betaIntroShown: false // Removed betaIntroShown as per user request
         };
 
         // window.userId will now be a random ID per session, as there's no auth
@@ -72,6 +71,21 @@
          * This array will be used to populate update sections in both the Start Menu and the About Windows 13 app.
          */
         window.windowsUpdates = [
+            {
+                version: '0.4.35',
+                codename: 'Beta Intro Disabled Bug Fix',
+                description: `
+                    This patch, version 0.4.35, specifically addresses a bug where the 'Beta Introduction' modal was
+                    incorrectly displayed to users upon first login on the desktop version of Windows 13.
+                    The beta introduction feature is intended exclusively for the mobile/phone versions of Nova OS,
+                    and this update ensures it no longer appears on desktop environments.
+                    <br><br>
+                    While the general concept of introducing new features via a welcome modal might be revisited
+                    for *future major desktop updates*, this specific 'Beta Introduction' will not be reused on desktop.
+                    For Nova phones, it remains a relevant feature for introducing new beta builds without affecting the desktop experience.
+                    This fix prevents an inconsistent user experience across different form factors.
+                `
+            },
             {
                 version: '0.4.3',
                 codename: 'Window changes & UI changes',
@@ -1104,15 +1118,16 @@
         }
 
 
-        /* Beta Intro Modal */
+        /* Beta Intro Modal (Removed - Keeping styling commented for reference) */
+        /*
         #beta-intro-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.75); /* Slightly darker overlay */
-            backdrop-filter: blur(15px); /* Stronger blur */
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(15px);
             z-index: 12000;
             display: flex;
             align-items: center;
@@ -1130,9 +1145,9 @@
             border: 1px solid var(--window-border);
             color: var(--window-text);
             border-radius: var(--border-radius-lg);
-            padding: 2.5rem; /* More padding */
+            padding: 2.5rem;
             width: 90%;
-            max-width: 650px; /* Slightly wider */
+            max-width: 650px;
             box-shadow: var(--window-shadow);
             transform: translateY(20px);
             opacity: 0;
@@ -1142,6 +1157,7 @@
             transform: translateY(0);
             opacity: 1;
         }
+        */
 
         /* --- NEW/UPDATED STYLES FOR "BETTER" UI --- */
 
@@ -1602,7 +1618,8 @@
     <!-- Custom Message Box -->
     <div id="message-box" class="hidden"></div>
 
-    <!-- Beta Intro Modal -->
+    <!-- Beta Intro Modal (Removed as per user request) -->
+    <!--
     <div id="beta-intro-modal" class="hidden">
         <div class="beta-intro-card">
             <h2 class="text-3xl font-bold mb-4 text-blue-400">Welcome to Windows 13 (0.4.3)</h2>
@@ -1627,6 +1644,7 @@
             </button>
         </div>
     </div>
+    -->
 
 
 <!-- Embedded JavaScript code -->
@@ -1644,6 +1662,7 @@
     let createAccountModal;
     let newUsernameInput;
     let newPasswordInput;
+    // let betaIntroModal; // Removed betaIntroModal as per user request
 
     let desktop;
     let desktopIconsZone;
@@ -1707,7 +1726,9 @@
 
     /**
      * Shows the beta introduction modal if it hasn't been shown before.
+     * (Removed this function body as per user request)
      */
+    /*
     function showBetaIntro() {
         // Find the beta intro for the latest update.
         // For now, it's hardcoded to the top one in the windowsUpdates array.
@@ -1725,10 +1746,13 @@
             setTimeout(() => betaIntroModal.classList.add('show'), 50); // Small delay for CSS transition
         }
     }
+    */
 
     /**
      * Hides the beta introduction modal and marks it as shown.
+     * (Removed this function body as per user request)
      */
+    /*
     function hideBetaIntro() {
         if (betaIntroModal) {
             betaIntroModal.classList.remove('show');
@@ -1741,6 +1765,7 @@
         window.userPreferences.betaIntroShown = true;
         saveUserPreferences(); // Persist that the intro has been shown
     }
+    */
 
     /**
      * Sets the active desktop icon, removing the active state from any previously active icon.
@@ -1841,7 +1866,7 @@
                         desktopEnvContainer.classList.add('desktop-active');
                         refreshDesktopAppearance(); // Call here after desktop is active
                     }
-                    showBetaIntro(); // Show beta intro after successful login transition
+                    // showBetaIntro(); // Removed showBetaIntro as per user request
                 }
             });
         } else {
@@ -3688,7 +3713,7 @@
         createAccountModal = document.getElementById('create-account-modal');
         newUsernameInput = document.getElementById('new-username-input');
         newPasswordInput = document.getElementById('new-password-input');
-        betaIntroModal = document.getElementById('beta-intro-modal'); // Assign beta intro modal
+        // betaIntroModal = document.getElementById('beta-intro-modal'); // Removed betaIntroModal as per user request
 
         desktop = document.getElementById('desktop');
         desktopIconsZone = document.getElementById('desktop-icons-zone');
