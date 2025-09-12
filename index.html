@@ -1,0 +1,281 @@
+\<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Windows 13 — Start Menu Build</title>
+  <style>
+    :root{
+      --fg: #0a0a0a;
+      --fg-dim: #c0c0c0;
+      --glass: rgba(9,12,16,0.74);
+      --stroke: rgba(162, 167, 187, 0.35);
+      --shadow: 0 10px 40px rgba(0,0,0,0.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--fg);
+      font: 500 14px/1.35 "Segoe UI Variable","Segoe UI", SegoeUI, system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      background: #0b1020 url("Assets/background/background.png") center/cover no-repeat fixed;
+    }
+
+    .desktop{position:fixed; inset:0}
+
+    /* Rounded, centered taskbar */
+    .taskbar{
+      position: fixed; left: 50%; bottom: 15px; transform: translateX(-50%);
+      width: clamp(820px, 70vw, 1200px);
+      height: 50px;
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px clamp(10px, 3vw, 24px);
+      backdrop-filter: saturate(130%) blur(20px);
+      background: var(--glass);
+      border: 1px solid var(--stroke);
+      box-shadow: 0px 0.1px 5px 2px rgba(162, 167, 187, 0.103);
+      gap: 12px; border-radius: 40px; color:#fff;
+    }
+    .zone{display:flex; align-items:center; gap: 12px; min-width:0}
+
+    /* Left: Weather */
+    .weather{display:flex; align-items:center; gap: 12px; position: relative}
+    .sun{width:28px; height:28px; border-radius:50%; background:radial-gradient(circle,#ffc43b 0%,#ff9800 100%); transition:opacity .3s,filter .3s}
+    .wx-text{display:flex; flex-direction:column; line-height:1.1}
+    .wx-temp{font-weight:400; font-size:16px}
+    .wx-cond{font-size:12px; color: var(--fg-dim)}
+
+    /* Weather hover card */
+    .wx-pop{position:absolute; left:0; bottom:calc(100% + 8px); min-width:180px; max-width:260px; padding:10px 12px; border-radius:12px; background: rgba(18,22,30,.75); backdrop-filter: blur(14px) saturate(120%); border:1px solid rgba(255,255,255,.14); box-shadow: var(--shadow); color:#e9eef5; opacity:0; transform:translateY(6px); pointer-events:none; transition:opacity .15s ease, transform .2s ease; z-index:5}
+    .wx-pop::after{content:""; position:absolute; left:16px; top:100%; width:10px; height:10px; background:inherit; border-right:1px solid rgba(255,255,255,.14); border-bottom:1px solid rgba(255,255,255,.14); transform:rotate(45deg)}
+    .weather:hover .wx-pop, .weather:focus-within .wx-pop{opacity:1; transform:translateY(0); pointer-events:auto}
+    .wx-pop .row{display:flex; align-items:center; gap:10px}
+    .wx-pop .big{font-size:18px; font-weight:700}
+    .wx-pop .label{font-size:13px; color:#b9c2d0}
+    .wx-pop .meta{font-size:12px; color:#a6b0bf; margin-top:6px}
+
+    /* Center: Start / Search / Photos */
+    .center{flex:1 1 auto; justify-content:center; gap:12px}
+    .task-icon{width:36px; height:36px; border-radius:4px; display:grid; place-items:center; border:1px solid transparent; background:transparent; padding:0; outline:none; transition:.15s ease-in-out}
+    .task-icon img{width:24px; height:24px; display:block}
+    .task-icon:hover{backdrop-filter:saturate(130%) blur(12px); background-color:rgba(75,82,94,.258); box-shadow:0 .1px 10px 2px rgba(162,167,187,.07); border-color:rgba(255,255,255,.151)}
+
+    .search{display:flex; align-items:center; gap:10px; min-width:15%; max-width:220px; flex:1 1 180px; padding:6px 10px; border-radius:18px; background:rgba(234,239,247,.95); border:2px solid #fff; height:30px; box-shadow:0 .1px 4px 2px rgba(154,150,161,.25)}
+    .search input{appearance:none; border:none; outline:none; background:transparent; color:#111; width:100%; font-size:14px; font:480 14px/1.35 "Segoe UI Variable","Segoe UI", SegoeUI, system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, "Noto Sans"}
+    .search input::placeholder{color:#666}
+
+    /* Right: Clock */
+    .clock{display:flex; flex-direction:column; align-items:flex-end; user-select:none; cursor:default}
+    .time{font:480 14px/1.35 "Segoe UI Variable","Segoe UI", SegoeUI, system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, "Noto Sans"; font-size:16px}
+    .date{font:400 14px/1.35 "Segoe UI Variable","Segoe UI", SegoeUI, system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, "Noto Sans"; font-size:12px; color:#fff}
+
+    /* ===================== Start Menu ===================== */
+    .start-wrap{position:fixed; inset:0; display:none}
+    .start-backdrop{position:absolute; inset:0; background:transparent}
+    .start{position:absolute; left:50%; bottom:78px; transform:translateX(-50%) translateY(20px); width:min(920px, 90vw); padding:18px; display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:14px; border-radius:18px; background:transparent; color:#e6edf7; backdrop-filter: blur(18px) saturate(130%); border:none; box-shadow:none; opacity:0; transition:opacity .18s ease, transform .22s ease}
+    .start.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+    /* The 3 cards themselves can have a hint of structure but no visible borders/colors for menu itself */
+    .card{border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); padding:14px; display:flex; flex-direction:column; gap:8px}
+    .card h3{margin:0 0 6px 0; font-size:14px; color:#cfe0ff; letter-spacing:.2px}
+    .row-flex{display:flex; align-items:center; gap:10px}
+    .muted{color:#aeb7c6; font-size:12px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px}
+    .btn-link{background:transparent; border:none; color:#b7d1ff; padding:0; font:inherit; cursor:pointer}
+
+    .updates .item{display:flex; flex-direction:column; gap:6px}
+    .updates .desc{max-height:3.5lh; overflow:hidden}
+    .updates .desc.open{max-height:none}
+
+    @media (max-width: 900px){.start{grid-template-columns:1fr; width:min(96vw,700px)}}
+  </style>
+</head>
+<body>
+  <div class="desktop" aria-hidden="true"></div>
+
+  <!-- ========== START MENU (hidden by default, no color/border) ========== -->
+  <div class="start-wrap" id="startWrap" aria-hidden="true">
+    <div class="start-backdrop" id="startBackdrop"></div>
+    <section class="start" id="startMenu" role="dialog" aria-label="Start menu">
+      <!-- Card 1: Weather summary -->
+      <article class="card weather-card">
+        <h3>Weather</h3>
+        <div class="row-flex">
+          <div class="sun" id="sunIconStart" aria-hidden="true" style="width:22px;height:22px"></div>
+          <div>
+            <div class="mono" id="wxTempStart">—°F</div>
+            <div class="muted" id="wxCondStart">Fetching…</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: Updates -->
+      <article class="card updates">
+        <h3>Updates</h3>
+        <div class="item">
+          <div class="mono" id="updateCode">WDP1U0</div>
+          <div class="desc" id="updateDesc">
+            Start menu added with a transparent container (no color, no border) and a 3-card grid: Weather, Updates, and Shortcuts. Integrated real weather via Open‑Meteo with geolocation fallback. Added Windows‑11‑style weather hover card on the taskbar. Centered glass taskbar with responsive width. Keyboard shortcuts wired.
+          </div>
+          <button class="btn-link" id="showMoreBtn" aria-expanded="false" hidden>Show more</button>
+        </div>
+      </article>
+
+      <!-- Card 3: Shortcuts (placeholder) -->
+      <article class="card">
+        <h3>Shortcuts</h3>
+        <div class="row-flex"><img src="Assets/Icons/windows-icon.png" alt="Start" width="16" height="16"><span class="muted">Press <span class="mono">Ctrl</span>+<span class="mono">E</span> to focus search</span></div>
+        <div class="row-flex"><img src="Assets/Icons/photos-icon.png" alt="Photos" width="16" height="16"><span class="muted">Hover weather for quick details</span></div>
+      </article>
+    </section>
+  </div>
+
+  <!-- ========== TASKBAR ========== -->
+  <footer class="taskbar" role="contentinfo" aria-label="Windows 13 Taskbar">
+    <div class="zone left">
+      <div class="weather" aria-label="Weather widget" tabindex="0">
+        <div class="sun" aria-hidden="true" id="sunIcon"></div>
+        <div class="wx-text">
+          <div class="wx-temp" id="wxTemp">—°F</div>
+          <div class="wx-cond" id="wxCond">Locating…</div>
+        </div>
+        <!-- Hover card -->
+        <div class="wx-pop" id="wxPop" role="tooltip" aria-hidden="true">
+          <div class="row"><div class="sun" style="width:18px;height:18px"></div>
+            <div class="big" id="wxPopTemp">—°F</div>
+          </div>
+          <div class="label" id="wxPopCond">—</div>
+          <div class="meta" id="wxPopMeta">Wind — mph • Updated now</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="zone center">
+      <button class="task-icon" id="startBtn" title="Start" aria-label="Open Start">
+        <img src="Assets/Icons/windows-icon.png" alt="Windows" />
+      </button>
+      <label class="search" aria-label="Search">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.8">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input id="searchInput" type="text" placeholder="Search" autocomplete="off" />
+      </label>
+      <button class="task-icon" title="Photos" aria-label="Open Photos">
+        <img src="Assets/Icons/photos-icon.png" alt="Photos" />
+      </button>
+    </div>
+
+    <div class="zone right">
+      <div class="clock" id="clock">
+        <div class="time" id="timeNow">12:00 AM</div>
+        <div class="date" id="dateNow">9/11/2025</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ----- Real Weather via Open-Meteo -----
+    const FALLBACK_COORDS = { lat: 38.2527, lon: -85.7585 }; // Louisville, KY
+    const DATE_STYLE = 'long';
+
+    function formatTime12h(d){
+      let h = d.getHours();
+      const m = d.getMinutes().toString().padStart(2,'0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12; if (h === 0) h = 12;
+      return `${h}:${m} ${ampm}`;
+    }
+    function formatDate(d){const m=d.getMonth()+1, day=d.getDate(), y=d.getFullYear(); return DATE_STYLE==='short'?`${m}/${day}/${(y%100).toString().padStart(2,'0')}`:`${m}/${day}/${y}`}
+    function mapWeatherCode(code){
+      if(code === 0) return { label: 'Sunny', sunny: true };
+      if(code === 1) return { label: 'Mostly clear', sunny: true };
+      if(code === 2) return { label: 'Partly cloudy', sunny: false };
+      if(code === 3) return { label: 'Overcast', sunny: false };
+      if(code === 45 || code === 48) return { label: 'Fog', sunny: false };
+      if(code >= 51 && code <= 57) return { label: 'Drizzle', sunny: false };
+      if(code >= 61 && code <= 67) return { label: 'Rain', sunny: false };
+      if(code >= 71 && code <= 77) return { label: 'Snow', sunny: false };
+      if(code >= 80 && code <= 82) return { label: 'Showers', sunny: false };
+      if(code >= 85 && code <= 86) return { label: 'Snow showers', sunny: false };
+      if(code >= 95 && code <= 99) return { label: 'Thunderstorm', sunny: false };
+      return { label: 'Weather', sunny: false };
+    }
+    async function fetchWeather(lat, lon){
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`;
+      const res = await fetch(url); if(!res.ok) throw new Error('Weather fetch failed'); return res.json();
+    }
+    function updateWeatherUI(tempF, label, sunny, wind){
+      const $ = (id)=>document.getElementById(id);
+      // Taskbar
+      $('wxTemp').textContent = `${Math.round(tempF)}°F`;
+      $('wxCond').textContent = label;
+      $('sunIcon').style.filter = sunny ? 'none' : 'grayscale(1) brightness(0.7)';
+      $('sunIcon').style.opacity = sunny ? '1' : '0.6';
+      // Hover card
+      $('wxPopTemp').textContent = `${Math.round(tempF)}°F`;
+      $('wxPopCond').textContent = label;
+      const t=new Date(); $('wxPopMeta').textContent = `Wind ${Math.round(wind)} mph • Updated ${t.getHours()%12||12}:${t.getMinutes().toString().padStart(2,'0')} ${t.getHours()>=12?'PM':'AM'}`;
+      // Start card
+      $('wxTempStart').textContent = `${Math.round(tempF)}°F`;
+      $('wxCondStart').textContent = label;
+      const sunStart=document.getElementById('sunIconStart');
+      sunStart.style.filter = sunny ? 'none' : 'grayscale(1) brightness(0.7)';
+      sunStart.style.opacity = sunny ? '1' : '0.6';
+    }
+    async function getLocationAndWeather(){
+      const onGotCoords = async (lat, lon) => {
+        try{ const data = await fetchWeather(lat, lon); const cw = data.current_weather; const mapped = mapWeatherCode(cw.weathercode); updateWeatherUI(cw.temperature, mapped.label, mapped.sunny, cw.windspeed); }
+        catch(err){ updateWeatherUI(72, 'Weather unavailable', false, 0); }
+      };
+      if('geolocation' in navigator){
+        navigator.geolocation.getCurrentPosition(
+          (pos)=> onGotCoords(pos.coords.latitude, pos.coords.longitude),
+          ()=> onGotCoords(FALLBACK_COORDS.lat, FALLBACK_COORDS.lon),
+          { enableHighAccuracy:false, timeout:8000, maximumAge:300000 }
+        );
+      } else { onGotCoords(FALLBACK_COORDS.lat, FALLBACK_COORDS.lon); }
+    }
+
+    function tick(){ const now = new Date(); document.getElementById('timeNow').textContent = formatTime12h(now); document.getElementById('dateNow').textContent = formatDate(now); }
+
+    // ----- Start menu toggle & outside click -----
+    const startWrap = document.getElementById('startWrap');
+    const startMenu = document.getElementById('startMenu');
+    const startBtn  = document.getElementById('startBtn');
+    const startBackdrop = document.getElementById('startBackdrop');
+
+    function openStart(){ startWrap.style.display='block'; requestAnimationFrame(()=> startMenu.classList.add('show')); }
+    function closeStart(){ startMenu.classList.remove('show'); setTimeout(()=> startWrap.style.display='none', 150); }
+
+    startBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(startWrap.style.display==='block'){ closeStart(); } else { openStart(); }});
+    startBackdrop.addEventListener('click', closeStart);
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeStart(); });
+
+    // ----- Updates card: show more toggle (auto-hide if not needed) -----
+    const showMoreBtn = document.getElementById('showMoreBtn');
+    const updateDesc  = document.getElementById('updateDesc');
+    // If the description overflows, show the button
+    const observer = new ResizeObserver(()=>{
+      const tooTall = updateDesc.scrollHeight > updateDesc.clientHeight + 1;
+      showMoreBtn.hidden = !tooTall;
+    });
+    observer.observe(updateDesc);
+
+    showMoreBtn.addEventListener('click', ()=>{
+      const open = updateDesc.classList.toggle('open');
+      showMoreBtn.textContent = open ? 'Show less' : 'Show more';
+      showMoreBtn.setAttribute('aria-expanded', String(open));
+    });
+
+    // Init
+    tick();
+    getLocationAndWeather();
+    setInterval(tick, 1000*15);
+    setInterval(getLocationAndWeather, 1000*60*15);
+
+    // Quick search focus
+    document.addEventListener('keydown', (e)=>{
+      if((e.ctrlKey || e.metaKey) && (e.key==='e' || e.key==='E')){ e.preventDefault(); document.getElementById('searchInput').focus(); }
+    });
+  </script>
+</body>
+</html>
